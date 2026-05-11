@@ -2,6 +2,7 @@ package domain;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class Deck {
 	private final List<Card> deck;
@@ -10,7 +11,11 @@ public class Deck {
 		deck = new ArrayList<Card>();
 	}
 
-	private void generateBaseDeck(){
+	public List<Card> getDeck() {
+		return List.copyOf(deck);
+	}
+	
+	public void generateBaseDeck(){
 		for(Suit suit : Suit.values()) {
 			for(Rank rank : Rank.values()) {
 				deck.add(new Card(rank, suit));
@@ -18,17 +23,14 @@ public class Deck {
 		}
 	}
 
-	public List<Card> getDeck() {
-		return deck;
+	public List<Card> getHand(int size) {
+		List<Card> out = new ArrayList<Card>();
+		Random rand = new Random();
+		while(out.size()<size) {
+			out.add(deck.get(rand.nextInt(deck.size())));
+		}
+		return out;
 	}
-
-	public void main(){
-		generateBaseDeck();
-		IO.println(deck);
-	}
+	
+	
 }
-
-
-
-// Combinaisaon hand = (HighCard) hand;
-// Combinaisaon hand = 
