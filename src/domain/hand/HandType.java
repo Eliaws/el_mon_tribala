@@ -23,6 +23,11 @@ public enum HandType {
 		this.baseMult = baseMult;
 	}
 
-	public int baseChips() { return baseChips; }
-	public int baseMult() { return baseMult; }
+	public int baseChips() {
+		return baseChips;
+	}
+
+	public int baseMult() {
+		return baseMult;
+	}
 }

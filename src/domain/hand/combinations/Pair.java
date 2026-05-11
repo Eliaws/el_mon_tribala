@@ -7,5 +7,8 @@ import domain.hand.HandType;
 import java.util.List;
 
 public record Pair(Rank rank, List<Card> scoringCards) implements PlayedHand {
-	@Override public HandType type() { return HandType.PAIR; }
+	@Override
+	public HandType type() {
+		return HandType.PAIR;
+	}
 }

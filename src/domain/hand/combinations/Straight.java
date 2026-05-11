@@ -7,5 +7,8 @@ import domain.hand.HandType;
 import java.util.List;
 
 public record Straight(Rank high, List<Card> scoringCards) implements PlayedHand {
-	@Override public HandType type() { return HandType.STRAIGHT; }
+	@Override
+	public HandType type() {
+		return HandType.STRAIGHT;
+	}
 }

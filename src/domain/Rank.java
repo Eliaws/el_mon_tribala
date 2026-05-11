@@ -16,12 +16,12 @@ public enum Rank{
 	Ace(11);
 	
 	private int value;
-	
+
 	Rank(int v) {
 		this.value = v;
 	}
-	
-	 public int value() {
-        return value;
-    }
+
+	public int value() {
+		return value;
+	}
 }
