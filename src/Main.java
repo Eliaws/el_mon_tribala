@@ -7,5 +7,6 @@ public class Main {
 		d.generateBaseDeck();
 		IO.println(d.getDeck().size());
 		IO.println(d.getHand(8));
+		d.showDeck();
 	}
 }
