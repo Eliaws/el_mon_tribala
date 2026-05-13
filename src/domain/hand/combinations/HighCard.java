@@ -4,6 +4,7 @@ import domain.Card;
 import domain.hand.HandType;
 import domain.Rank;
 import domain.Suit;
+import domain.consummables.Planet;
 
 import java.util.List;
 import java.util.Objects;
@@ -27,4 +28,10 @@ public record HighCard(Card card) implements PlayedHand {
 	public List<Card> scoringCards() {
 		return List.of(card);
 	}
+
+	@Override
+	public Planet planet() {
+		return Planet.Pluto;
+	}
+
 }

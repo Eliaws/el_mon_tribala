@@ -2,6 +2,7 @@ package domain.hand.combinations;
 
 import domain.Card;
 import domain.Rank;
+import domain.consummables.Planet;
 import domain.hand.HandType;
 
 import java.util.List;
@@ -17,5 +18,10 @@ public record FourOfAKind(Rank rank, List<Card> scoringCards) implements PlayedH
 	@Override
 	public HandType type() {
 		return HandType.FOUR_OF_A_KIND;
+	}
+
+	@Override
+	public Planet planet() {
+		return Planet.Mars;
 	}
 }
