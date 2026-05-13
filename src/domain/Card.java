@@ -10,6 +10,6 @@ public record Card(Rank rank, Suit suit) {
 
 	@Override
 	public final String toString() {
-		return rank + " of " + suit;
+		return rank.toString() + suit.toString();
 	}
 }
