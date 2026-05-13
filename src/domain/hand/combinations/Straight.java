@@ -2,6 +2,7 @@ package domain.hand.combinations;
 
 import domain.Card;
 import domain.Rank;
+import domain.consummables.Planet;
 import domain.hand.HandType;
 
 import java.util.List;
@@ -17,5 +18,10 @@ public record Straight(Rank high, List<Card> scoringCards) implements PlayedHand
 	@Override
 	public HandType type() {
 		return HandType.STRAIGHT;
+	}
+
+	@Override
+	public Planet planet() {
+		return Planet.Saturn;
 	}
 }
