@@ -1,7 +1,5 @@
 package domain;
 
-import java.util.Objects;
-
 public record Blind(int score) {
 	public Blind {
 		if(score < 1) {
