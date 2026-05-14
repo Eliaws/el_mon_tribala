@@ -1,7 +1,6 @@
 package domain.hand.scoring;
 
 import java.util.Map;
-
 import domain.consummables.Planet;
 import domain.hand.HandType;
 import domain.hand.combinations.PlayedHand;
