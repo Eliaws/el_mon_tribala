@@ -70,9 +70,7 @@ public class GameController {
 		var deck = gameState.getCurrentDeck();
 		deck.discard(selectedCards);
 		gameState.getCurrentHand().removeAll(selectedCards);
-		while (selectedCards.size() > 0) {
-			selectedCards.remove(0);
-		}
+		selectedCards.clear();
 		gameState.setCurrentDiscards(gameState.getCurrentDiscards() + 1);
 		draw();
 	}
@@ -100,9 +98,7 @@ public class GameController {
 		gameState.setCurrentBlindScore(addedScore.total() + currentScore);
 		gameState.getCurrentDeck().discard(selectedCards);
 		gameState.getCurrentHand().removeAll(selectedCards);
-		while (selectedCards.size() > 0) {
-			selectedCards.remove(0);
-		}
+		selectedCards.clear();
 		gameState.setCurrentHandsPlay(gameState.getCurrentHandsPlay() + 1);
 
 		if (isCurrentBlindWon()) {
@@ -160,9 +156,7 @@ public class GameController {
 		}
 		var hand = gameState.getCurrentHand();
 		gameState.getCurrentDeck().discard(hand);
-		while (hand.size() > 0) {
-			hand.remove(0);
-		}
+		hand.clear();
 		gameState.setCurrentBlindScore(0);
 		gameState.setCurrentDiscards(0);
 		gameState.setCurrentHandsPlay(0);
