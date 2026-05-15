@@ -1,32 +1,28 @@
 package domain.consummables;
 
+import domain.hand.HandType;
+
 public enum Planet {
-    Pluto(1,10),
-    Mercury(1,15),
-    Uranus(1,20),
-    Venus(2,20),
-    Saturn(3,30),
-    Jupiter(2, 15),
-    Earth(2, 25),
-    Mars(3, 30),
-    Neptune(4, 40),
-    PlanetX(3, 35),
-    Ceres(4, 40),
-    Eris(3, 50);
+	Pluto(HandType.HIGH_CARD),
+	Mercury(HandType.PAIR),
+	Uranus(HandType.TWO_PAIR),
+	Venus(HandType.THREE_OF_A_KIND),
+	Saturn(HandType.STRAIGHT),
+	Jupiter(HandType.FLUSH),
+	Earth(HandType.FULL_HOUSE),
+	Mars(HandType.FOUR_OF_A_KIND),
+	Neptune(HandType.STRAIGHT_FLUSH),
+	PlanetX(HandType.FIVE_OF_A_KIND),
+	Ceres(HandType.FLUSH_HOUSE),
+	Eris(HandType.FLUSH_FIVE);
 
-    private int mult;
-    private int chips;
+	private final HandType target;
 
-	Planet(int mult, int chips) {
-		this.chips = chips;
-		this.mult = mult;
+	Planet(HandType target) {
+		this.target = target;
 	}
 
-	public int getChips() {
-		return chips;
+	public HandType getTarget() {
+		return target;
 	}
-
-	public int getMult() {
-		return mult;
-	}
-}    
+}
