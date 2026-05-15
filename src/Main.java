@@ -12,86 +12,84 @@ import model.GameState;
 public class Main {
 
 	public static void main(String[] args) {
-		HandEvaluator evaluator = new HandEvaluator();
-
-		test(evaluator, "HIGH_CARD", List.of(
+		test("HIGH_CARD", List.of(
 				new Card(Rank.Two, Suit.Hearts),
 				new Card(Rank.Five, Suit.Spades),
 				new Card(Rank.Seven, Suit.Clovers),
 				new Card(Rank.Ace, Suit.Diamonds),
 				new Card(Rank.King, Suit.Hearts)));
 
-		test(evaluator, "PAIR", List.of(
+		test("PAIR", List.of(
 				new Card(Rank.Five, Suit.Hearts),
 				new Card(Rank.Five, Suit.Spades),
 				new Card(Rank.Seven, Suit.Clovers),
 				new Card(Rank.Nine, Suit.Diamonds),
 				new Card(Rank.King, Suit.Hearts)));
 
-		test(evaluator, "TWO_PAIR", List.of(
+		test("TWO_PAIR", List.of(
 				new Card(Rank.Five, Suit.Hearts),
 				new Card(Rank.Five, Suit.Spades),
 				new Card(Rank.Nine, Suit.Clovers),
 				new Card(Rank.Nine, Suit.Diamonds),
 				new Card(Rank.King, Suit.Hearts)));
 
-		test(evaluator, "THREE_OF_A_KIND", List.of(
+		test("THREE_OF_A_KIND", List.of(
 				new Card(Rank.Five, Suit.Hearts),
 				new Card(Rank.Five, Suit.Spades),
 				new Card(Rank.Five, Suit.Clovers),
 				new Card(Rank.Nine, Suit.Diamonds),
 				new Card(Rank.King, Suit.Hearts)));
 
-		test(evaluator, "STRAIGHT (low)", List.of(
+		test("STRAIGHT (low)", List.of(
 				new Card(Rank.Two, Suit.Hearts),
 				new Card(Rank.Three, Suit.Spades),
 				new Card(Rank.Four, Suit.Clovers),
 				new Card(Rank.Five, Suit.Diamonds),
 				new Card(Rank.Six, Suit.Hearts)));
 
-		test(evaluator, "STRAIGHT (high)", List.of(
+		test("STRAIGHT (high)", List.of(
 				new Card(Rank.Ten, Suit.Hearts),
 				new Card(Rank.Jack, Suit.Spades),
 				new Card(Rank.Queen, Suit.Clovers),
 				new Card(Rank.King, Suit.Diamonds),
 				new Card(Rank.Ace, Suit.Hearts)));
 
-		test(evaluator, "STRAIGHT (wheel)", List.of(
+		test("STRAIGHT (wheel)", List.of(
 				new Card(Rank.Ace, Suit.Hearts),
 				new Card(Rank.Two, Suit.Spades),
 				new Card(Rank.Three, Suit.Clovers),
 				new Card(Rank.Four, Suit.Diamonds),
 				new Card(Rank.Five, Suit.Hearts)));
 
-		test(evaluator, "FLUSH", List.of(
+		test("FLUSH", List.of(
 				new Card(Rank.Two, Suit.Hearts),
 				new Card(Rank.Five, Suit.Hearts),
 				new Card(Rank.Seven, Suit.Hearts),
 				new Card(Rank.Nine, Suit.Hearts),
 				new Card(Rank.King, Suit.Hearts)));
 
-		test(evaluator, "FULL_HOUSE", List.of(
+		test("FULL_HOUSE", List.of(
 				new Card(Rank.Five, Suit.Hearts),
 				new Card(Rank.Five, Suit.Spades),
 				new Card(Rank.Five, Suit.Clovers),
 				new Card(Rank.Nine, Suit.Diamonds),
 				new Card(Rank.Nine, Suit.Hearts)));
 
-		test(evaluator, "FOUR_OF_A_KIND", List.of(
+		test("FOUR_OF_A_KIND", List.of(
 				new Card(Rank.Five, Suit.Hearts),
 				new Card(Rank.Five, Suit.Spades),
 				new Card(Rank.Five, Suit.Clovers),
 				new Card(Rank.Five, Suit.Diamonds),
 				new Card(Rank.King, Suit.Hearts)));
 
-		test(evaluator, "STRAIGHT_FLUSH", List.of(
+		test("STRAIGHT_FLUSH", List.of(
 				new Card(Rank.Two, Suit.Hearts),
 				new Card(Rank.Three, Suit.Hearts),
 				new Card(Rank.Four, Suit.Hearts),
 				new Card(Rank.Five, Suit.Hearts),
 				new Card(Rank.Six, Suit.Hearts)));
 
-		test(evaluator, "ROYAL_FLUSH", List.of(
+		test("ROYAL_FLUSH", List.of(
 				new Card(Rank.Ten, Suit.Hearts),
 				new Card(Rank.Jack, Suit.Hearts),
 				new Card(Rank.Queen, Suit.Hearts),
@@ -213,11 +211,11 @@ public class Main {
 		controller.play();
 	}
 
-	private static void test(HandEvaluator evaluator, String expected, List<Card> cards) {
+	private static void test(String expected, List<Card> cards) {
 		String got;
 		String scoring = "";
 		try {
-			PlayedHand hand = evaluator.evaluate(cards);
+			PlayedHand hand = HandEvaluator.evaluate(cards);
 			got = hand.type().name();
 			scoring = " | scoring=" + hand.scoringCards();
 		} catch (Exception e) {
