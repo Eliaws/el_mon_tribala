@@ -14,11 +14,12 @@ public class GameState {
 
 	private int maxHandSize;
 	private int maxHandsPlay;
-	private int maxDiscardsPlay;
+	private int currentHandsPlay;
+	private int maxDiscards;
+	private int currentDiscard;
 //	private int maxJokers;
 	private int ante;
 	private int round;
-	private int currentDiscardNumber;
 	private int currentBlindScore;
 
 	private final List<Blind> blinds;
@@ -26,24 +27,26 @@ public class GameState {
 
 //  List<Joker> currentJokers;
 	private final List<Card> currentHand;
-	private final List<Card> choosenCards;
+	private final List<Card> selectedCards;
 	private final Map<Planet, Integer> planets;
 	private final Map<PlayedHand, Integer> playedHandStats;
 
 	public GameState() {
 		this.maxHandSize = 8;
-		this.maxHandsPlay = 4;
-		this.maxDiscardsPlay = 3;
-		
+		this.maxHandsPlay = 5;
+		this.currentHandsPlay = 0;
+		this.maxDiscards = 3;
+		this.currentDiscard = 0;
+
 		this.currentBlindScore = 0;
-		this.currentDiscardNumber = 0;
 		this.ante = 1;
+		this.round = 1;
 		this.blinds = new ArrayList<Blind>();
-		
+
 		this.currentDeck = new Deck();
 		this.currentHand = new ArrayList<Card>();
-		this.choosenCards = new ArrayList<Card>();
-		
+		this.selectedCards = new ArrayList<Card>();
+
 		this.planets = new HashMap<Planet, Integer>();
 		this.playedHandStats = new HashMap<PlayedHand, Integer>();
 
@@ -76,12 +79,12 @@ public class GameState {
 		return maxHandSize;
 	}
 
-	public int getMaxHandsPlay() {
+	public int getMaxHands() {
 		return maxHandsPlay;
 	}
 
-	public int getMaxDiscardsPlay() {
-		return maxDiscardsPlay;
+	public int getMaxDiscards() {
+		return maxDiscards;
 	}
 
 	public int getAnte() {
@@ -103,7 +106,7 @@ public class GameState {
 	public List<Card> getCurrentHand() {
 		return currentHand;
 	}
-	
+
 	public Deck getCurrentDeck() {
 		return currentDeck;
 	}
@@ -111,24 +114,32 @@ public class GameState {
 	public Map<PlayedHand, Integer> getPlayedHandStats() {
 		return playedHandStats;
 	}
-	
-	public List<Card> getChoosenCards() {
-		return choosenCards;
+
+	public List<Card> getSelectedCards() {
+		return selectedCards;
 	}
 
 	public int getCurrentBlindScore() {
 		return currentBlindScore;
 	}
-	
+
 	public void setCurrentBLindScore(int score) {
 		currentBlindScore = score;
 	}
-	
-	public int getDiscardNumber() {
-		return currentDiscardNumber;
+
+	public int getCurrentDiscards() {
+		return currentDiscard;
 	}
-	
-	public void setDiscardNumber(int number) {
-		currentDiscardNumber = number;
+
+	public void setCurrentDiscards(int number) {
+		currentDiscard = number;
+	}
+
+	public int getCurrentHandsPlay() {
+		return currentHandsPlay;
+	}
+
+	public void setCurrentHandsPlay(int number) {
+		currentHandsPlay = number;
 	}
 }

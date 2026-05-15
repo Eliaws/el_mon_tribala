@@ -7,47 +7,101 @@ import model.GameState;
 
 public class GameController {
 	GameState gameState;
-	
-	
+
 	public GameController() {
 		this.gameState = new GameState();
 	}
-	
+
 	public void draw() {
 		var hand = gameState.getCurrentHand();
-		for (Card c: gameState.getCurrentDeck().getCard(gameState.getHandSize()-hand.size())) {
+		for (Card c : gameState.getCurrentDeck().getCard(gameState.getHandSize() - hand.size())) {
 			hand.add(c);
 		}
 	}
 
-	public boolean choose(int index) {
-		var choosenCards = gameState.getChoosenCards();
+	public boolean select(int index) {
 		var hand = gameState.getCurrentHand();
-		if(index >= hand.size()) {
+		if (index >= hand.size()) {
 			return false;
 		}
-		choosenCards.add(hand.remove(index));
+		var selectedCards = gameState.getSelectedCards();
+		selectedCards.add(hand.get(index));
 		return true;
 	}
-	
+
+	public boolean unselect(int index) {
+		var hand = gameState.getCurrentHand();
+		if (index >= hand.size()) {
+			return false;
+		}
+		var selectedCards = gameState.getSelectedCards();
+		selectedCards.remove(hand.get(index));
+		return true;
+	}
+
+	public boolean canDiscard() {
+		if (gameState.getCurrentDiscards() <= gameState.getMaxDiscards()) {
+			return true;
+		}
+		return false;
+	}
+
 	public void discard() {
-		var choosenCards = gameState.getChoosenCards();
+		var selectedCards = gameState.getSelectedCards();
 		var deck = gameState.getCurrentDeck();
-		deck.discard(choosenCards);
-		while(choosenCards.size()>0) {
-			choosenCards.remove(0);
+		deck.discard(selectedCards);
+		gameState.getCurrentHand().removeAll(selectedCards);
+		while (selectedCards.size() > 0) {
+			selectedCards.remove(0);
 		}
+		gameState.setCurrentDiscards(gameState.getCurrentDiscards() + 1);
 	}
-	
-	public boolean play() {
-		var choosenCards = gameState.getChoosenCards();
-		if(choosenCards.size() == 0) {
-			return false;
+
+	public boolean canPlay() {
+		if (gameState.getCurrentHandsPlay() < gameState.getMaxHands()) {
+			return true;
 		}
-		var played = HandEvaluator.evaluate(choosenCards);
+		return false;
+	}
+
+	public void play() {
+		var selectedCards = gameState.getSelectedCards();
+		var played = HandEvaluator.evaluate(selectedCards);
 		var addedScore = HandScorer.score(played, gameState.getPlanets());
+		var stats = gameState.getPlayedHandStats();
+		stats.put(played, stats.getOrDefault(played, 0) + 1);
 		var currentScore = gameState.getCurrentBlindScore();
-		gameState.setCurrentBLindScore(addedScore.chips()*addedScore.mult()+currentScore);
-		return true;
+		gameState.setCurrentBLindScore(addedScore.chips() * addedScore.mult() + currentScore);
+		gameState.getCurrentDeck().discard(selectedCards);
+		gameState.getCurrentHand().removeAll(selectedCards);
+		while (selectedCards.size() > 0) {
+			selectedCards.remove(0);
+		}
+		gameState.setCurrentHandsPlay(gameState.getCurrentHandsPlay() + 1);
+	}
+
+	public boolean isCurrentBlindWon() {
+		var currentBlind = gameState.getBlinds().get(gameState.getRound() % 3);
+		var currentBlindScore = gameState.getCurrentBlindScore();
+		if (currentBlindScore >= currentBlind.score()) {
+			return true;
+		}
+		return false;
+	}
+
+	public void finishBlind() {
+		var hand = gameState.getCurrentHand();
+		gameState.getCurrentDeck().discard(hand);
+		while (hand.size() > 0) {
+			hand.remove(0);
+		}
+		gameState.setCurrentBLindScore(0);
+		gameState.setCurrentDiscards(0);
+		gameState.setCurrentHandsPlay(0);
+		gameState.setRound(gameState.getRound() + 1);
+		gameState.setAnte(gameState.getRound() / 3);
+		if ((gameState.getRound() % 3) == 1) {
+			gameState.setBlinds();
+		}
 	}
 }
