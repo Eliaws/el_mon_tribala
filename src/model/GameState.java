@@ -8,7 +8,7 @@ import domain.Blind;
 import domain.Card;
 import domain.Deck;
 import domain.consummables.Planet;
-import domain.hand.combinations.PlayedHand;
+import domain.hand.HandType;
 
 public class GameState {
 
@@ -28,12 +28,12 @@ public class GameState {
 //  List<Joker> currentJokers;
 	private final List<Card> currentHand;
 	private final List<Card> selectedCards;
-	private final Map<Planet, Integer> planets;
-	private final Map<PlayedHand, Integer> playedHandStats;
+	private final Map<HandType, Integer> handLevels;
+	private final Map<HandType, Integer> playedHandStats;
 
 	public GameState() {
 		this.maxHandSize = 8;
-		this.maxHandsPlay = 5;
+		this.maxHandsPlay = 4;
 		this.currentHandsPlay = 0;
 		this.maxDiscards = 3;
 		this.currentDiscard = 0;
@@ -47,10 +47,11 @@ public class GameState {
 		this.currentHand = new ArrayList<Card>();
 		this.selectedCards = new ArrayList<Card>();
 
-		this.planets = new HashMap<Planet, Integer>();
-		this.playedHandStats = new HashMap<PlayedHand, Integer>();
+		this.handLevels = new HashMap<HandType, Integer>();
+		this.playedHandStats = new HashMap<HandType, Integer>();
 
 		this.currentDeck.generateBaseDeck();
+		this.setBlinds();
 	}
 
 	public List<Blind> getBlinds() {
@@ -68,11 +69,11 @@ public class GameState {
 	}
 
 	public void addPlanet(Planet p) {
-		this.planets.put(p, this.planets.getOrDefault(p, 0) + 1);
+		this.handLevels.merge(p.getTarget(), 1, Integer::sum);
 	}
 
-	public Map<Planet, Integer> getPlanets() {
-		return planets;
+	public Map<HandType, Integer> getHandLevels() {
+		return handLevels;
 	}
 
 	public int getHandSize() {
@@ -111,7 +112,7 @@ public class GameState {
 		return currentDeck;
 	}
 
-	public Map<PlayedHand, Integer> getPlayedHandStats() {
+	public Map<HandType, Integer> getPlayedHandStats() {
 		return playedHandStats;
 	}
 
@@ -123,7 +124,7 @@ public class GameState {
 		return currentBlindScore;
 	}
 
-	public void setCurrentBLindScore(int score) {
+	public void setCurrentBlindScore(int score) {
 		currentBlindScore = score;
 	}
 

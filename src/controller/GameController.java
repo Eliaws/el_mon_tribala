@@ -40,7 +40,7 @@ public class GameController {
 	}
 
 	public boolean canDiscard() {
-		if (gameState.getCurrentDiscards() <= gameState.getMaxDiscards()) {
+		if (gameState.getCurrentDiscards() < gameState.getMaxDiscards()) {
 			return true;
 		}
 		return false;
@@ -55,6 +55,7 @@ public class GameController {
 			selectedCards.remove(0);
 		}
 		gameState.setCurrentDiscards(gameState.getCurrentDiscards() + 1);
+		draw();
 	}
 
 	public boolean canPlay() {
@@ -67,21 +68,22 @@ public class GameController {
 	public void play() {
 		var selectedCards = gameState.getSelectedCards();
 		var played = HandEvaluator.evaluate(selectedCards);
-		var addedScore = HandScorer.score(played, gameState.getPlanets());
+		var addedScore = HandScorer.score(played, gameState.getHandLevels());
 		var stats = gameState.getPlayedHandStats();
-		stats.put(played, stats.getOrDefault(played, 0) + 1);
+		stats.merge(played.type(), 1, Integer::sum);
 		var currentScore = gameState.getCurrentBlindScore();
-		gameState.setCurrentBLindScore(addedScore.chips() * addedScore.mult() + currentScore);
+		gameState.setCurrentBlindScore(addedScore.total() + currentScore);
 		gameState.getCurrentDeck().discard(selectedCards);
 		gameState.getCurrentHand().removeAll(selectedCards);
 		while (selectedCards.size() > 0) {
 			selectedCards.remove(0);
 		}
 		gameState.setCurrentHandsPlay(gameState.getCurrentHandsPlay() + 1);
+		draw();
 	}
 
 	public boolean isCurrentBlindWon() {
-		var currentBlind = gameState.getBlinds().get(gameState.getRound() % 3);
+		var currentBlind = gameState.getBlinds().get((gameState.getRound() - 1) % 3);
 		var currentBlindScore = gameState.getCurrentBlindScore();
 		if (currentBlindScore >= currentBlind.score()) {
 			return true;
@@ -95,12 +97,12 @@ public class GameController {
 		while (hand.size() > 0) {
 			hand.remove(0);
 		}
-		gameState.setCurrentBLindScore(0);
+		gameState.setCurrentBlindScore(0);
 		gameState.setCurrentDiscards(0);
 		gameState.setCurrentHandsPlay(0);
 		gameState.setRound(gameState.getRound() + 1);
-		gameState.setAnte(gameState.getRound() / 3);
-		if ((gameState.getRound() % 3) == 1) {
+		gameState.setAnte(((gameState.getRound() - 1) / 3) + 1);
+		if (((gameState.getRound() - 1) % 3) == 0) {
 			gameState.setBlinds();
 		}
 	}
