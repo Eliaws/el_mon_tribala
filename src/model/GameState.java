@@ -4,9 +4,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import domain.Blind;
 import domain.Card;
 import domain.Deck;
+import domain.Shop;
 import domain.consummables.Planet;
 import domain.hand.HandType;
 
@@ -21,9 +23,12 @@ public class GameState {
 	private int ante;
 	private int round;
 	private int currentBlindScore;
+	private int dollars;
+	private GamePhase phase;
 
 	private final List<Blind> blinds;
 	private final Deck currentDeck;
+	private final Shop shop;
 
 //  List<Joker> currentJokers;
 	private final List<Card> currentHand;
@@ -41,9 +46,12 @@ public class GameState {
 		this.currentBlindScore = 0;
 		this.ante = 1;
 		this.round = 1;
+		this.dollars = 4;
+		this.phase = GamePhase.PLAYING_BLIND;
 		this.blinds = new ArrayList<Blind>();
 
 		this.currentDeck = new Deck();
+		this.shop = new Shop();
 		this.currentHand = new ArrayList<Card>();
 		this.selectedCards = new ArrayList<Card>();
 
@@ -63,12 +71,13 @@ public class GameState {
 			this.blinds.remove(0);
 		}
 		// TODO: change score formula
-		this.blinds.add(new Blind(100 * ante));
-		this.blinds.add(new Blind((int) (100 * ante * 1.5)));
-		this.blinds.add(new Blind((int) (100 * ante * 2)));
+		this.blinds.add(new Blind(100 * ante, 3));
+		this.blinds.add(new Blind((int) (100 * ante * 1.5), 4));
+		this.blinds.add(new Blind((int) (100 * ante * 2), 5));
 	}
 
 	public void addPlanet(Planet p) {
+		Objects.requireNonNull(p);
 		this.handLevels.merge(p.getTarget(), 1, Integer::sum);
 	}
 
@@ -142,5 +151,26 @@ public class GameState {
 
 	public void setCurrentHandsPlay(int number) {
 		currentHandsPlay = number;
+	}
+
+	public int getDollars() {
+		return dollars;
+	}
+
+	public void addDollars(int amount) {
+		this.dollars += amount;
+	}
+
+	public GamePhase getPhase() {
+		return phase;
+	}
+
+	public void setPhase(GamePhase phase) {
+		Objects.requireNonNull(phase);
+		this.phase = phase;
+	}
+
+	public Shop getShop() {
+		return shop;
 	}
 }
