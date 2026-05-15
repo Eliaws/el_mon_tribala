@@ -1,10 +1,13 @@
 import java.util.List;
 
+import controller.GameController;
 import domain.Card;
 import domain.Rank;
 import domain.Suit;
 import domain.hand.combinations.PlayedHand;
 import domain.hand.evaluation.HandEvaluator;
+import model.GamePhase;
+import model.GameState;
 
 public class Main {
 
@@ -95,7 +98,119 @@ public class Main {
 				new Card(Rank.King, Suit.Hearts),
 				new Card(Rank.Ace, Suit.Hearts)));
 
-		
+		scenarioFullCycle();
+		scenarioDefeat();
+		scenarioMultiBlind();
+	}
+
+	private static void scenarioFullCycle() {
+		System.out.println("\n=== Scenario: blinde gagnee -> shop -> achat -> sortie ===\n");
+		GameController controller = new GameController();
+		GameState state = controller.getGameState();
+
+		System.out.println("[Init] phase=" + state.getPhase()
+				+ " | ante=" + state.getAnte()
+				+ " | round=" + state.getRound()
+				+ " | dollars=$" + state.getDollars()
+				+ " | Small blind cible=" + state.getBlinds().get(0).score());
+
+		state.getCurrentHand().clear();
+		state.getCurrentHand().addAll(List.of(
+				new Card(Rank.King, Suit.Hearts),
+				new Card(Rank.Queen, Suit.Hearts),
+				new Card(Rank.Jack, Suit.Hearts),
+				new Card(Rank.Nine, Suit.Hearts),
+				new Card(Rank.Five, Suit.Hearts)));
+		System.out.println("[Hand injectee] " + state.getCurrentHand());
+
+		for (int i = 0; i < 5; i++) {
+			controller.select(i);
+		}
+		System.out.println("[Selectionne] " + state.getSelectedCards());
+
+		controller.play();
+		System.out.println("[Apres play] phase=" + state.getPhase()
+				+ " | blind score=" + state.getCurrentBlindScore()
+				+ " | dollars=$" + state.getDollars()
+				+ " | stats=" + state.getPlayedHandStats());
+
+		if (state.getPhase() == GamePhase.SHOP) {
+			System.out.println("[Shop] offres=" + state.getShop().getOffers());
+
+			boolean bought = controller.buyPlanet(0);
+			System.out.println("[Achat offre 0] " + (bought ? "OK" : "FAIL")
+					+ " | dollars=$" + state.getDollars()
+					+ " | levels=" + state.getHandLevels());
+
+			controller.exitShop();
+			System.out.println("[Apres exitShop] phase=" + state.getPhase()
+					+ " | ante=" + state.getAnte()
+					+ " | round=" + state.getRound()
+					+ " | hand size=" + state.getCurrentHand().size()
+					+ " | nouveau Big blind cible=" + state.getBlinds().get(1).score());
+		} else {
+			System.out.println("[!] La blinde n'a pas ete gagnee, phase=" + state.getPhase());
+		}
+	}
+
+	private static void scenarioDefeat() {
+		System.out.println("\n=== Scenario: defaite apres 4 mains faibles ===\n");
+		GameController controller = new GameController();
+		GameState state = controller.getGameState();
+		System.out.println("[Init] phase=" + state.getPhase()
+				+ " | cible Small=" + state.getBlinds().get(0).score()
+				+ " | maxHands=" + state.getMaxHands());
+
+		for (int i = 1; i <= 4; i++) {
+			state.getCurrentHand().clear();
+			state.getCurrentHand().add(new Card(Rank.Two, Suit.Hearts));
+			controller.select(0);
+			controller.play();
+			System.out.println("[Main " + i + "/4] phase=" + state.getPhase()
+					+ " | score cumul=" + state.getCurrentBlindScore()
+					+ " | hands joues=" + state.getCurrentHandsPlay());
+		}
+	}
+
+	private static void scenarioMultiBlind() {
+		System.out.println("\n=== Scenario: 3 blindes -> interest + transition ante ===\n");
+		GameController controller = new GameController();
+		GameState state = controller.getGameState();
+		System.out.println("[Init] $" + state.getDollars()
+				+ " | ante=" + state.getAnte()
+				+ " | round=" + state.getRound()
+				+ " | cible Small=" + state.getBlinds().get(0).score());
+
+		String[] labels = { "Small", "Big", "Boss" };
+		int[] rewards = { 3, 4, 5 };
+		for (int i = 0; i < 3; i++) {
+			int dollarsBefore = state.getDollars();
+			int interest = Math.min(dollarsBefore / 5, 5);
+			injectFlushAndPlay(controller, state);
+			int handBonus = state.getMaxHands() - state.getCurrentHandsPlay();
+			System.out.println("[Win " + labels[i] + "] score=" + state.getCurrentBlindScore()
+					+ " | gain = $" + rewards[i] + "(reward) + $" + handBonus + "(mains restantes) + $" + interest
+					+ "(interest) -> $" + state.getDollars());
+			controller.exitShop();
+			int idx = (state.getRound() - 1) % 3;
+			System.out.println("[Exit shop] round=" + state.getRound()
+					+ " | ante=" + state.getAnte()
+					+ " | prochaine cible " + labels[idx] + "=" + state.getBlinds().get(idx).score());
+		}
+	}
+
+	private static void injectFlushAndPlay(GameController controller, GameState state) {
+		state.getCurrentHand().clear();
+		state.getCurrentHand().addAll(List.of(
+				new Card(Rank.King, Suit.Hearts),
+				new Card(Rank.Queen, Suit.Hearts),
+				new Card(Rank.Jack, Suit.Hearts),
+				new Card(Rank.Nine, Suit.Hearts),
+				new Card(Rank.Five, Suit.Hearts)));
+		for (int i = 0; i < 5; i++) {
+			controller.select(i);
+		}
+		controller.play();
 	}
 
 	private static void test(HandEvaluator evaluator, String expected, List<Card> cards) {
