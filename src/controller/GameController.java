@@ -102,9 +102,12 @@ public class GameController {
 		gameState.setCurrentHandsPlay(gameState.getCurrentHandsPlay() + 1);
 
 		if (isCurrentBlindWon()) {
+			if(isGameWon()) {
+				winGame();
+			}
 			winBlind();
-		} else if (gameState.getCurrentHandsPlay() >= gameState.getMaxHands()) {
-			gameState.setPhase(GamePhase.GAME_OVER);
+		} else if (isCurrentBlindLost()) {
+			looseBlind();
 		} else {
 			draw();
 		}
@@ -119,12 +122,37 @@ public class GameController {
 		return false;
 	}
 
+	public boolean isCurrentBlindLost() {
+		boolean noHandsLeft = gameState.getCurrentHandsPlay() >= gameState.getMaxHands();
+		if (noHandsLeft && !isCurrentBlindWon()) {
+			return true;
+		}
+		return false;
+	}
+
 	private void winBlind() {
 		var blind = gameState.getBlinds().get((gameState.getRound() - 1) % 3);
 		int handBonus = gameState.getMaxHands() - gameState.getCurrentHandsPlay();
 		int interest = Math.min(gameState.getDollars() / 5, 5);
 		gameState.addDollars(blind.reward() + handBonus + interest);
 		enterShop();
+	}
+
+	public boolean isGameWon() {
+		if (gameState.getAnte() > 8) {
+			return true;
+		} else if (gameState.getRound() % 3 == 2 && gameState.getAnte() == 8) {
+			return isCurrentBlindWon();
+		}
+		return false;
+	}
+
+	private void winGame() {
+		gameState.setPhase(GamePhase.VICTORY);
+	}
+
+	private void looseBlind() {
+		gameState.setPhase(GamePhase.GAME_OVER);
 	}
 
 	private void enterShop() {

@@ -3,5 +3,6 @@ package model;
 public enum GamePhase {
 	PLAYING_BLIND,
 	SHOP,
-	GAME_OVER
+	GAME_OVER,
+	VICTORY
 }
