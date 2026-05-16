@@ -19,6 +19,7 @@ public class GameState {
 	private int currentHandsPlay;
 	private int maxDiscards;
 	private int currentDiscard;
+	private int maxSelected;
 //	private int maxJokers;
 	private int ante;
 	private int round;
@@ -42,6 +43,7 @@ public class GameState {
 		this.currentHandsPlay = 0;
 		this.maxDiscards = 3;
 		this.currentDiscard = 0;
+		this.maxSelected = 5;
 
 		this.currentBlindScore = 0;
 		this.ante = 1;
@@ -95,6 +97,10 @@ public class GameState {
 
 	public int getMaxDiscards() {
 		return maxDiscards;
+	}
+
+	public int getMaxSelected() {
+		return maxSelected;
 	}
 
 	public int getAnte() {
