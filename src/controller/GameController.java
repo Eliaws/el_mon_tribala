@@ -109,10 +109,11 @@ public class GameController {
 		gameState.setCurrentHandsPlay(gameState.getCurrentHandsPlay() + 1);
 
 		if (isCurrentBlindWon()) {
-			if(isGameWon()) {
+			if (isGameWon()) {
 				winGame();
+			} else {
+				winBlind();
 			}
-			winBlind();
 		} else if (isCurrentBlindLost()) {
 			looseBlind();
 		} else {
@@ -148,7 +149,7 @@ public class GameController {
 	public boolean isGameWon() {
 		if (gameState.getAnte() > 8) {
 			return true;
-		} else if (gameState.getRound() % 3 == 2 && gameState.getAnte() == 8) {
+		} else if ((gameState.getRound() - 1) % 3 == 2 && gameState.getAnte() == 8) {
 			return isCurrentBlindWon();
 		}
 		return false;
