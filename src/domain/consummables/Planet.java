@@ -11,10 +11,10 @@ public enum Planet {
 	Jupiter(HandType.FLUSH),
 	Earth(HandType.FULL_HOUSE),
 	Mars(HandType.FOUR_OF_A_KIND),
-	Neptune(HandType.STRAIGHT_FLUSH),
-	PlanetX(HandType.FIVE_OF_A_KIND),
-	Ceres(HandType.FLUSH_HOUSE),
-	Eris(HandType.FLUSH_FIVE);
+	Neptune(HandType.STRAIGHT_FLUSH);
+	// PlanetX(HandType.FIVE_OF_A_KIND),
+	// Ceres(HandType.FLUSH_HOUSE),
+	// Eris(HandType.FLUSH_FIVE);
 
 	private final HandType target;
 
