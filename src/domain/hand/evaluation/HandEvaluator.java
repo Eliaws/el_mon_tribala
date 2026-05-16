@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 
 public class HandEvaluator {
 
-	public PlayedHand evaluate(List<Card> cards) {
+	public static PlayedHand evaluate(List<Card> cards) {
 		if(isRoyalFlush(cards)) {
 			var suit = cards.get(0).suit();
 			return new RoyalFlush(suit, cards);
@@ -69,7 +69,7 @@ public class HandEvaluator {
 		}
 	}
 
-	public boolean isRoyalFlush(List<Card> cards) {
+	public static boolean isRoyalFlush(List<Card> cards) {
 		if(isStraightFlush(cards)) {
 			if(cards.stream().anyMatch(c -> c.rank() == Rank.Ten) &&
 			   cards.stream().anyMatch(c -> c.rank() == Rank.Jack) &&
@@ -82,14 +82,14 @@ public class HandEvaluator {
 		return false;
 	}
 
-	public boolean isStraightFlush(List<Card> cards) {
+	public static boolean isStraightFlush(List<Card> cards) {
 		if(isFlush(cards) && isStraight(cards)) {
 			return true;
 		}
 		return false;
 	}
 
-	public boolean isFourOfAKind(List<Card> cards) {
+	public static boolean isFourOfAKind(List<Card> cards) {
 		if(cards.stream().anyMatch(c -> cards.stream().filter(cc -> cc.rank() == c.rank()).count() == 4)) {
 			return true;
 		}
@@ -97,13 +97,13 @@ public class HandEvaluator {
 
 	}
 
-	public boolean isFullHouse(List<Card> cards) {
+	public static boolean isFullHouse(List<Card> cards) {
 		boolean hasThreeOfAKind = cards.stream().anyMatch(c -> cards.stream().filter(cc -> cc.rank() == c.rank()).count() == 3);
 		boolean hasPair = cards.stream().anyMatch(c -> cards.stream().filter(cc -> cc.rank() == c.rank()).count() == 2);
 		return hasThreeOfAKind && hasPair;
 	}
 
-	public boolean isFlush(List<Card> cards) {
+	public static boolean isFlush(List<Card> cards) {
 		if (cards.size() != 5) {
 			return false;
 		}
@@ -111,7 +111,7 @@ public class HandEvaluator {
 		return cards.stream().allMatch(c -> c.suit() == suit);
 	}
 
-	public boolean isStraight(List<Card> cards) {
+	public static boolean isStraight(List<Card> cards) {
 		if (cards.size() != 5) {
 			return false;
 		}
@@ -129,7 +129,7 @@ public class HandEvaluator {
 		return true;
 	}
 
-	private Rank straightHigh(List<Card> cards) {
+	private static Rank straightHigh(List<Card> cards) {
 		List<Rank> ranks = cards.stream().map(Card::rank).sorted().collect(Collectors.toList());
 		if (ranks.get(0) == Rank.Two && ranks.get(4) == Rank.Ace) {
 			return Rank.Five;
@@ -137,21 +137,21 @@ public class HandEvaluator {
 		return ranks.get(4);
 	}
 
-	public boolean isThreeOfAKind(List<Card> cards) {
+	public static boolean isThreeOfAKind(List<Card> cards) {
 		return cards.stream().anyMatch(c -> cards.stream().filter(cc -> cc.rank() == c.rank()).count() == 3);
 	}
 
-	public boolean isTwoPair(List<Card> cards) {
+	public static boolean isTwoPair(List<Card> cards) {
 		long pairCount = cards.stream().collect(Collectors.groupingBy(Card::rank))
 				.values().stream().filter(g -> g.size() == 2).count();
 		return pairCount == 2;
 	}
 
-	public boolean isPair(List<Card> cards) {
+	public static boolean isPair(List<Card> cards) {
 		return cards.stream().anyMatch(c -> cards.stream().filter(cc -> cc.rank() == c.rank()).count() == 2);
 	}
 
-	public HighCard highCard(List<Card> cards) {
+	public static HighCard highCard(List<Card> cards) {
 		Card highest = cards.stream().max(java.util.Comparator.comparing(Card::rank)).get();
 		return new HighCard(highest);
 	}

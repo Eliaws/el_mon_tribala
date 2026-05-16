@@ -1,7 +1,6 @@
 package domain.hand.combinations;
 
 import domain.Card;
-import domain.consummables.Planet;
 import domain.hand.HandType;
 
 import java.util.List;
@@ -10,7 +9,6 @@ public sealed interface PlayedHand permits HighCard, Pair, TwoPair, ThreeOfAKind
 		FourOfAKind, StraightFlush, RoyalFlush {
 
 	HandType type();
-	Planet planet();
 
 	List<Card> scoringCards(); // Uniquement les cartes qui font la combinaison, pas les cartes en +
 }

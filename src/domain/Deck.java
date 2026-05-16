@@ -34,7 +34,7 @@ public class Deck {
 		}
 	}
 
-	public List<Card> getHand(int size) {
+	public List<Card> getCard(int size) {
 		List<Card> out = new ArrayList<Card>();
 		Random rand = new Random();
 		while (out.size() < size) {
@@ -42,10 +42,15 @@ public class Deck {
 				reshuffle();
 			}
 			Card draw = deck.remove(rand.nextInt(deck.size()));
-			discard.add(draw);
 			out.add(draw);
 		}
 		return out;
+	}
+	
+	public void discard(List<Card> discarded) {
+		for (Card card : discarded) {
+			discard.add(card);
+		}
 	}
 
 	private void reshuffle() {
