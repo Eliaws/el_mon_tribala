@@ -31,11 +31,18 @@ public class GameController {
 			return false;
 		}
 		var hand = gameState.getCurrentHand();
-		if (index >= hand.size()) {
+		if (index < 0 || index >= hand.size()) {
 			return false;
 		}
 		var selectedCards = gameState.getSelectedCards();
-		selectedCards.add(hand.get(index));
+		if (selectedCards.size() >= gameState.getMaxSelected()) {
+			return false;
+		}
+		Card card = hand.get(index);
+		if (selectedCards.contains(card)) {
+			return false;
+		}
+		selectedCards.add(card);
 		return true;
 	}
 
