@@ -27,6 +27,9 @@ public class GameState {
 	private int dollars;
 	private GamePhase phase;
 
+	private boolean sortedByRank;
+	private boolean sortedBySuit;
+
 	private final List<Blind> blinds;
 	private final Deck currentDeck;
 	private final Shop shop;
@@ -44,6 +47,9 @@ public class GameState {
 		this.maxDiscards = 3;
 		this.currentDiscard = 0;
 		this.maxSelected = 5;
+
+		this.sortedByRank = true;
+		this.sortedBySuit = false;
 
 		this.currentBlindScore = 0;
 		this.ante = 1;
@@ -109,6 +115,22 @@ public class GameState {
 
 	public void setAnte(int ante) {
 		this.ante = ante;
+	}
+
+	public boolean isSortedByRank() {
+		return sortedByRank;
+	}
+
+	public boolean isSortedBySuit() {
+		return sortedBySuit;
+	}
+
+	public void setSortedByRank(boolean sortedByRank) {
+		this.sortedByRank = sortedByRank;
+	}
+
+	public void setSortedBySuit(boolean sortedBySuit) {
+		this.sortedBySuit = sortedBySuit;
 	}
 
 	public int getRound() {

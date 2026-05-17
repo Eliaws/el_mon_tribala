@@ -1,5 +1,7 @@
 package controller;
 
+import java.util.Comparator;
+
 import domain.Card;
 import domain.Shop;
 import domain.consummables.Planet;
@@ -24,6 +26,33 @@ public class GameController {
 		for (Card c : gameState.getCurrentDeck().getCard(gameState.getHandSize() - hand.size())) {
 			hand.add(c);
 		}
+		if(gameState.isSortedByRank()) {
+			sortHandByRank();
+		} else if (gameState.isSortedBySuit()) {
+			sortHandBySuit();
+		}
+	}
+
+
+	public void sortHandByRank() {
+		if (gameState.getPhase() != GamePhase.PLAYING_BLIND) {
+			return;
+		}
+		gameState.setSortedByRank(true);
+		gameState.setSortedBySuit(false);
+
+		gameState.getCurrentHand().sort(Comparator.comparingInt((Card c) -> c.rank().ordinal()));
+
+	}
+
+	public void sortHandBySuit() {
+		if (gameState.getPhase() != GamePhase.PLAYING_BLIND) {
+			return;
+		}
+		gameState.setSortedBySuit(true);
+		gameState.setSortedByRank(false);
+
+		gameState.getCurrentHand().sort(Comparator.comparingInt((Card c) -> c.suit().ordinal()).thenComparingInt(c -> c.rank().ordinal()));
 	}
 
 	public boolean select(int index) {
