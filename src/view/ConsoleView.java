@@ -293,16 +293,13 @@ public class ConsoleView {
 		if (input.isEmpty()) {
 			return;
 		}
-		String s = input.toLowerCase().trim();
-		if (s == "r") {
+		char c = input.charAt(0);
+		if (c == 'r') {
 			controller = new GameController();
 			controller.draw();
-		} else if (s == "s") {
-			controller = new GameController();
-			controller.draw();
-		} else if (s == "h" || s == "?") {
+		} else if (c == 'h' || c == '?') {
 			showHelp();
-		} else if (s == "q") {
+		} else if (c == 'q') {
 			running = false;
 		}
 	}
