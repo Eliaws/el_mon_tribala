@@ -1,5 +1,7 @@
 package controller;
 
+import java.util.Comparator;
+
 import domain.Card;
 import domain.Shop;
 import domain.consummables.Planet;
@@ -24,6 +26,33 @@ public class GameController {
 		for (Card c : gameState.getCurrentDeck().getCard(gameState.getHandSize() - hand.size())) {
 			hand.add(c);
 		}
+		if(gameState.isSortedByRank()) {
+			sortHandByRank();
+		} else if (gameState.isSortedBySuit()) {
+			sortHandBySuit();
+		}
+	}
+
+
+	public void sortHandByRank() {
+		if (gameState.getPhase() != GamePhase.PLAYING_BLIND) {
+			return;
+		}
+		gameState.setSortedByRank(true);
+		gameState.setSortedBySuit(false);
+
+		gameState.getCurrentHand().sort(Comparator.comparingInt((Card c) -> c.rank().ordinal()));
+
+	}
+
+	public void sortHandBySuit() {
+		if (gameState.getPhase() != GamePhase.PLAYING_BLIND) {
+			return;
+		}
+		gameState.setSortedBySuit(true);
+		gameState.setSortedByRank(false);
+
+		gameState.getCurrentHand().sort(Comparator.comparingInt((Card c) -> c.suit().ordinal()).thenComparingInt(c -> c.rank().ordinal()));
 	}
 
 	public boolean select(int index) {
@@ -31,11 +60,18 @@ public class GameController {
 			return false;
 		}
 		var hand = gameState.getCurrentHand();
-		if (index >= hand.size()) {
+		if (index < 0 || index >= hand.size()) {
 			return false;
 		}
 		var selectedCards = gameState.getSelectedCards();
-		selectedCards.add(hand.get(index));
+		if (selectedCards.size() >= gameState.getMaxSelected()) {
+			return false;
+		}
+		Card card = hand.get(index);
+		if (selectedCards.contains(card)) {
+			return false;
+		}
+		selectedCards.add(card);
 		return true;
 	}
 
@@ -102,10 +138,11 @@ public class GameController {
 		gameState.setCurrentHandsPlay(gameState.getCurrentHandsPlay() + 1);
 
 		if (isCurrentBlindWon()) {
-			if(isGameWon()) {
+			if (isGameWon()) {
 				winGame();
+			} else {
+				winBlind();
 			}
-			winBlind();
 		} else if (isCurrentBlindLost()) {
 			looseBlind();
 		} else {
@@ -141,7 +178,7 @@ public class GameController {
 	public boolean isGameWon() {
 		if (gameState.getAnte() > 8) {
 			return true;
-		} else if (gameState.getRound() % 3 == 2 && gameState.getAnte() == 8) {
+		} else if ((gameState.getRound() - 1) % 3 == 2 && gameState.getAnte() == 8) {
 			return isCurrentBlindWon();
 		}
 		return false;
