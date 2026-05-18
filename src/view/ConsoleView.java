@@ -135,7 +135,7 @@ public class ConsoleView {
 				System.out.println("  " + DIM + "[" + (i + 1) + "]" + RESET
 						+ " " + BOLD + p.name() + RESET
 						+ DIM + "  ($" + Shop.PLANET_PRICE + ")" + RESET);
-				System.out.println("      " + BOLD + formatHandType(target) + RESET
+				System.out.println("      ↳  " + BOLD + formatHandType(target) + RESET
 						+ DIM + "  lvl " + level + " → " + (level + 1) + RESET
 						+ "    " + GREEN + "+" + target.levelChips() + " chips, +" + target.levelMult() + " mult" + RESET);
 			}

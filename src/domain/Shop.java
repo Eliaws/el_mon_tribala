@@ -7,7 +7,7 @@ import java.util.Random;
 import domain.consummables.Planet;
 
 public class Shop {
-	public static final int SLOT_COUNT = 2;
+	public static final int SLOT_COUNT = 3;
 	public static final int PLANET_PRICE = 3;
 
 	private final List<Planet> offers;
