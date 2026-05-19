@@ -24,7 +24,10 @@ L'architecture suit un découpage MVC :
 Depuis la racine du projet :
 
 ```
-javac -d out src/Main.java src/controller/*.java src/model/*.java src/view/*.java src/domain/*.java src/domain/consummables/*.java src/domain/hand/*.java src/domain/hand/combinations/*.java src/domain/hand/evaluation/*.java src/domain/hand/scoring/*.java
+cd src/
+```
+```
+java Main.java
 ```
 
 ## Lancement
