@@ -19,7 +19,7 @@ L'architecture suit un découpage MVC :
 - JDK 25
 - Un terminal supportant les codes ANSI (couleurs)
 
-## Compilation
+## Compilation & Lancement (provisoire)
 
 Depuis la racine du projet :
 
@@ -30,8 +30,8 @@ cd src/
 java Main.java
 ```
 
-## Lancement
+<!-- ## Lancement
 
 ```
 java -cp out Main
-```
+``` -->
