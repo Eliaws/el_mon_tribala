@@ -20,7 +20,12 @@ public class GameController {
 	public GameState getGameState() {
 		return gameState;
 	}
-
+	
+	/**
+	 * Draws cards from the deck to the hand until the hand is full. 
+	 * If the hand is already full, does nothing. If the hand is sorted, 
+	 * sorts the hand after drawing.
+	 */
 	public void draw() {
 		var hand = gameState.getCurrentHand();
 		for (Card c : gameState.getCurrentDeck().getCard(gameState.getHandSize() - hand.size())) {
@@ -33,7 +38,9 @@ public class GameController {
 		}
 	}
 
-
+	/**
+	 * Sets the current sort order to rank and sorts the player's hand by rank.
+	 */
 	public void sortHandByRank() {
 		if (gameState.getPhase() != GamePhase.PLAYING_BLIND) {
 			return;
@@ -45,6 +52,9 @@ public class GameController {
 
 	}
 
+	/**
+	 * Sets the current sort order to suit and sorts the player's hand by suit.
+	 */
 	public void sortHandBySuit() {
 		if (gameState.getPhase() != GamePhase.PLAYING_BLIND) {
 			return;
@@ -55,6 +65,12 @@ public class GameController {
 		gameState.getCurrentHand().sort(Comparator.comparingInt((Card c) -> c.suit().ordinal()).thenComparingInt(c -> c.rank().ordinal()));
 	}
 
+	/**
+	 * Selects a card from the player's hand to be discarded or played. 
+	 * Returns true if the card was successfully selected, false otherwise.
+	 * @param index the index of the card in the player's hand to be selected
+	 * @return true if the card was successfully selected, false otherwise
+	 */
 	public boolean select(int index) {
 		if (gameState.getPhase() != GamePhase.PLAYING_BLIND) {
 			return false;
@@ -75,6 +91,13 @@ public class GameController {
 		return true;
 	}
 
+	/**
+	 * Unselects a card from the player's hand that was previously selected 
+	 * to be discarded or played. Returns true if the card was successfully 
+	 * unselected, false otherwise.
+	 * @param index the index of the card in the player's hand to be unselected
+	 * @return true if the card was unselected, false otherwise
+	 */
 	public boolean unselect(int index) {
 		if (gameState.getPhase() != GamePhase.PLAYING_BLIND) {
 			return false;
@@ -88,6 +111,12 @@ public class GameController {
 		return true;
 	}
 
+	/**
+	 * Checks if the player can discard cards. 
+	 * The player can discard if the current phase is PLAYING_BLIND and 
+	 * the number of discards made is less than the maximum allowed discards.
+	 * @return true if the player can discard cards, false otherwise
+	 */
 	public boolean canDiscard() {
 		if (gameState.getPhase() != GamePhase.PLAYING_BLIND) {
 			return false;
@@ -98,6 +127,11 @@ public class GameController {
 		return false;
 	}
 
+	/**
+	 * Discards the selected cards from the player's hand and adds them 
+	 * to the discard pile of the deck. Increments the current discards 
+	 * count and draws new cards to replace the discarded ones.
+	 */
 	public void discard() {
 		if (gameState.getPhase() != GamePhase.PLAYING_BLIND) {
 			return;
@@ -111,6 +145,12 @@ public class GameController {
 		draw();
 	}
 
+	/**
+	 * Checks if the player can play their hand. 
+	 * The player can play if the current phase is PLAYING_BLIND and 
+	 * the number of hands played is less than the maximum allowed hands.
+	 * @return true if the player can play their hand, false otherwise
+	 */
 	public boolean canPlay() {
 		if (gameState.getPhase() != GamePhase.PLAYING_BLIND) {
 			return false;
@@ -150,6 +190,10 @@ public class GameController {
 		}
 	}
 
+	/**
+	 * Checks if the player has won the current blind.
+	 * @return true if the player's current blind is won, false otherwise
+	 */
 	public boolean isCurrentBlindWon() {
 		var currentBlind = gameState.getBlinds().get((gameState.getRound() - 1) % 3);
 		var currentBlindScore = gameState.getCurrentBlindScore();
@@ -159,6 +203,10 @@ public class GameController {
 		return false;
 	}
 
+	/**
+	 * Checks if the player has lost the current blind.
+	 * @return true if the player's current blind is lost, false otherwise
+	 */
 	public boolean isCurrentBlindLost() {
 		boolean noHandsLeft = gameState.getCurrentHandsPlay() >= gameState.getMaxHands();
 		if (noHandsLeft && !isCurrentBlindWon()) {
@@ -167,6 +215,11 @@ public class GameController {
 		return false;
 	}
 
+	/**
+	 * Prepares the game state for the next round after winning a blind.
+	 * Rewards the player with dollars based on the blind's reward, a hand bonus, 
+	 * and an interest bonus. Then enters the shop phase.
+	 */
 	private void winBlind() {
 		var blind = gameState.getBlinds().get((gameState.getRound() - 1) % 3);
 		int handBonus = gameState.getMaxHands() - gameState.getCurrentHandsPlay();
@@ -175,6 +228,11 @@ public class GameController {
 		enterShop();
 	}
 
+	/**
+	 * Checks if the player has won the game. The player wins the game if they have won 
+	 * more than 8 ante, or if they have won the last blind of the 8th ante.
+	 * @return true if the player has won the game, false otherwise
+	 */
 	public boolean isGameWon() {
 		if (gameState.getAnte() > 8) {
 			return true;
@@ -197,6 +255,12 @@ public class GameController {
 		gameState.setPhase(GamePhase.SHOP);
 	}
 
+	/**
+	 * Allows the player to buy a planet from the shop if they have enough dollars 
+	 * and if the offer index is valid.
+	 * @param offerIndex
+	 * @return true if the planet was successfully bought, false otherwise
+	 */
 	public boolean buyPlanet(int offerIndex) {
 		if (gameState.getPhase() != GamePhase.SHOP) {
 			return false;
@@ -215,6 +279,12 @@ public class GameController {
 		return true;
 	}
 
+	/**
+	 * Exits the shop phase and prepares the game state for the next round. 
+	 * Discards the player's hand, resets the current blind score, discards count, 
+	 * and hands played count. Increments the round and updates the ante and blinds 
+	 * if necessary. Then enters the playing blind phase.
+	 */
 	public void exitShop() {
 		if (gameState.getPhase() != GamePhase.SHOP) {
 			return;
