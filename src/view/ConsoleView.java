@@ -18,18 +18,18 @@ import model.GameState;
 
 public class ConsoleView {
 
-	private static final String RESET = "[0m";
-	private static final String BOLD = "[1m";
-	private static final String DIM = "[2m";
-	private static final String RED = "[31m";
-	private static final String GREEN = "[32m";
-	private static final String YELLOW = "[33m";
-	private static final String ORANGE = "[38;5;208m";
-	private static final String BRIGHT_GREEN = "[92m";
-	private static final String CYAN = "[36m";
-	private static final String BG_YELLOW = "[43m";
-	private static final String BLACK = "[30m";
-	private static final String CLEAR_SCREEN = "[2J[H";
+	private static final String RESET = "\u001B[0m";
+	private static final String BOLD = "\u001B[1m";
+	private static final String DIM = "\u001B[2m";
+	private static final String RED = "\u001B[31m";
+	private static final String GREEN = "\u001B[32m";
+	private static final String YELLOW = "\u001B[33m";
+	private static final String ORANGE = "\u001B[38;5;208m";
+	private static final String BRIGHT_GREEN = "\u001B[92m";
+	private static final String CYAN = "\u001B[36m";
+	private static final String BG_YELLOW = "\u001B[43m";
+	private static final String BLACK = "\u001B[30m";
+	private static final String CLEAR_SCREEN = "\u001B[2J\u001B[H";
 
 	private static final String[] BLIND_LABELS = { "Small Blind", "Big Blind", "Boss Blind" };
 
