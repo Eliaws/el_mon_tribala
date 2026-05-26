@@ -1,9 +1,12 @@
 import controller.GameController;
 import view.ConsoleView;
+import view.View;
 
 public class Main {
 
 	public static void main(String[] args) {
-		new ConsoleView(new GameController()).run();
+		GameController controller = new GameController();
+		View view = new ConsoleView(controller);
+		view.run();
 	}
 }
