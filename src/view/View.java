@@ -1,21 +1,18 @@
 package view;
 
+import controller.PlayResult;
 import model.GameState;
 
-public interface View {
+public sealed interface View permits ConsoleView {
 
-    public void renderPlaying(GameState gameState);
+	public void render(GameState gameState);
 
-    public void renderShop(GameState gameState);
+	public String getUserInput();
 
-    public void renderGameOver(GameState gameState);
+	public void renderInvalidInput(GameState gameState, String input);
 
-    public void renderVictory(GameState gameState);
+	public void renderHelp();
 
-    public String getUserInput();
-
-    public void renderInvalidInput();
-
-    public void renderHelp();
+	public void renderPlayResult(GameState gameState, PlayResult result);
 
 }
