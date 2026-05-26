@@ -33,11 +33,216 @@ public final class ConsoleView implements View {
 
 	private final GameController controller;
 	private final Scanner scanner;
+	private boolean running;
 
 	public ConsoleView(GameController controller) {
 		this.controller = controller;
 		this.scanner = new Scanner(System.in);
+		this.running = true;
 	}
+
+	@Override
+	public void run() {
+		controller.start();
+		while (running) {
+			GameState state = controller.getGameState();
+			render(state);
+			switch (state.getPhase()) {
+				case PLAYING_BLIND -> handlePlay(state);
+				case SHOP -> handleShop(state);
+				case GAME_OVER, VICTORY -> handleEnd();
+			}
+		}
+	}
+
+	// ─── Boucle CLI : traduction entrées texte → actions du controller ─────
+
+	private void handlePlay(GameState state) {
+		String input = getUserInput();
+		if (input.isEmpty()) {
+			return;
+		}
+
+		String[] tokens = input.replace(",", " ").split("\\s+");
+		String first = tokens[0];
+
+		if (first.equals("p") || first.equals("play")) {
+			executePlay(tokens);
+			return;
+		}
+		if (first.equals("d") || first.equals("discard")) {
+			executeDiscard(tokens);
+			return;
+		}
+
+		char c = input.charAt(0);
+		if (Character.isDigit(c)) {
+			toggleTokens(input);
+		} else if (c == 'c') {
+			controller.clearSelection();
+		} else if (c == 'r') {
+			controller.sortHandByRank();
+		} else if (c == 's') {
+			controller.sortHandBySuit();
+		} else if (c == 'h' || c == '?') {
+			renderHelp();
+			getUserInput();
+		} else if (c == 'q') {
+			running = false;
+		} else {
+			renderInvalidInput(input);
+		}
+	}
+
+	private void handleShop(GameState state) {
+		String input = getUserInput();
+		if (input.isEmpty()) {
+			return;
+		}
+		char c = input.charAt(0);
+		if (Character.isDigit(c)) {
+			Integer n = parseInt(input);
+			if (n == null) {
+				renderInvalidInput(input);
+				return;
+			}
+			if (!controller.buyPlanet(n - 1)) {
+				int price = Shop.PLANET_PRICE;
+				if (state.getDollars() < price) {
+					renderInvalidInput("Pas assez de dollars (besoin $" + price + ")");
+				} else {
+					renderInvalidInput("Offre indisponible");
+				}
+			}
+		} else if (c == 'e') {
+			controller.exitShop();
+		} else if (c == 'h' || c == '?') {
+			renderHelp();
+			getUserInput();
+		} else if (c == 'q') {
+			running = false;
+		} else {
+			renderInvalidInput(input);
+		}
+	}
+
+	private void handleEnd() {
+		String input = getUserInput();
+		if (input.isEmpty()) {
+			return;
+		}
+		char c = input.charAt(0);
+		if (c == 'r') {
+			controller.restart();
+		} else if (c == 'h' || c == '?') {
+			renderHelp();
+			getUserInput();
+		} else if (c == 'q') {
+			running = false;
+		} else {
+			renderInvalidInput(input);
+		}
+	}
+
+	/**
+	 * "p 1 3 5" → remplace la sélection courante par 1, 3, 5 et joue.
+	 * "p" seul → joue la sélection courante.
+	 */
+	private void executePlay(String[] tokens) {
+		if (tokens.length > 1) {
+			controller.clearSelection();
+			if (!selectIndices(tokens, 1)) {
+				return;
+			}
+		}
+		if (controller.getGameState().getSelectedCards().isEmpty()) {
+			renderInvalidInput("Aucune carte sélectionnée");
+			return;
+		}
+		PlayResult result = controller.play();
+		if (result != null) {
+			renderPlayResult(controller.getGameState(), result);
+			getUserInput();
+		}
+	}
+
+	/**
+	 * "d 2 4" → remplace la sélection par 2, 4 et jette. "d" seul → jette la sélection.
+	 */
+	private void executeDiscard(String[] tokens) {
+		if (tokens.length > 1) {
+			controller.clearSelection();
+			if (!selectIndices(tokens, 1)) {
+				return;
+			}
+		}
+		GameState state = controller.getGameState();
+		if (state.getSelectedCards().isEmpty()) {
+			renderInvalidInput("Aucune carte sélectionnée");
+			return;
+		}
+		if (!controller.canDiscard()) {
+			renderInvalidInput("Plus de discards disponibles");
+			return;
+		}
+		controller.discard();
+	}
+
+	/**
+	 * Toggle "1 3 5" sans jouer ni jeter. Stop au premier token invalide.
+	 */
+	private void toggleTokens(String input) {
+		String[] tokens = input.replace(",", " ").split("\\s+");
+		for (String token : tokens) {
+			if (token.isEmpty()) {
+				continue;
+			}
+			Integer n = parseInt(token);
+			if (n == null) {
+				renderInvalidInput("Token ignoré: " + token);
+				continue;
+			}
+			if (!controller.toggle(n - 1)) {
+				int handSize = controller.getGameState().getCurrentHand().size();
+				if (n < 1 || n > handSize) {
+					renderInvalidInput("Index hors main (1-" + handSize + "): " + n);
+				} else {
+					renderInvalidInput("Sélection max atteinte (" + controller.getGameState().getMaxSelected() + ")");
+				}
+				return;
+			}
+		}
+	}
+
+	private boolean selectIndices(String[] tokens, int start) {
+		for (int i = start; i < tokens.length; i++) {
+			Integer n = parseInt(tokens[i]);
+			if (n == null) {
+				renderInvalidInput("Token ignoré: " + tokens[i]);
+				continue;
+			}
+			if (!controller.toggle(n - 1)) {
+				int handSize = controller.getGameState().getCurrentHand().size();
+				if (n < 1 || n > handSize) {
+					renderInvalidInput("Index hors main (1-" + handSize + "): " + n);
+				} else {
+					renderInvalidInput("Sélection max atteinte (" + controller.getGameState().getMaxSelected() + ")");
+				}
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private Integer parseInt(String s) {
+		try {
+			return Integer.parseInt(s);
+		} catch (NumberFormatException e) {
+			return null;
+		}
+	}
+
+	// ─── I/O console (lecture + affichage) ─────────────────────────────────
 
 	@Override
 	public void render(GameState state) {
@@ -50,8 +255,7 @@ public final class ConsoleView implements View {
 		}
 	}
 
-	@Override
-	public String getUserInput() {
+	private String getUserInput() {
 		System.out.print("\n> ");
 		if (!scanner.hasNextLine()) {
 			return "q";
@@ -60,7 +264,11 @@ public final class ConsoleView implements View {
 	}
 
 	@Override
-	public void renderInvalidInput(GameState state, String input) {
+	public void renderInvalidInput(GameState state, String message) {
+		renderInvalidInput(message);
+	}
+
+	private void renderInvalidInput(String input) {
 		System.out.println();
 		System.out.println(YELLOW + input + RESET);
 	}
@@ -90,15 +298,17 @@ public final class ConsoleView implements View {
 				+ "    + $1 par main restante\n"
 				+ "    + intérêts ($1 par tranche de $5 possédés, cap $5)\n\n"
 				+ BOLD + "Commandes en blinde" + RESET + "\n"
-				+ "  [1-8]      toggle une carte (sélection / désélection)\n"
-				+ "  [1 3 5]    toggle plusieurs cartes d'un coup\n"
-				+ "  P          jouer la sélection\n"
-				+ "  D          jeter la sélection (re-pioche)\n"
-				+ "  C          vider la sélection\n"
-				+ "  R          trier la main par rang (2 → A)\n"
-				+ "  S          trier la main par suit (♣ ♥ ♠ ♦)\n"
-				+ "  H ou ?     cette aide\n"
-				+ "  Q          quitter\n\n"
+				+ "  [1-8]            toggle une carte (sélection / désélection)\n"
+				+ "  [1 3 5]          toggle plusieurs cartes d'un coup\n"
+				+ "  P (ou play)      jouer la sélection courante\n"
+				+ "  P 1 3 5          remplacer la sélection par 1, 3, 5 puis jouer\n"
+				+ "  D (ou discard)   jeter la sélection courante (re-pioche)\n"
+				+ "  D 2 4            remplacer la sélection par 2, 4 puis jeter\n"
+				+ "  C                vider la sélection\n"
+				+ "  R                trier la main par rang (2 → A)\n"
+				+ "  S                trier la main par suit (♣ ♥ ♠ ♦)\n"
+				+ "  H ou ?           cette aide\n"
+				+ "  Q                quitter\n\n"
 				+ BOLD + "Commandes shop" + RESET + "\n"
 				+ "  [1-N]      acheter l'offre N ($" + Shop.PLANET_PRICE + ")\n"
 				+ "  E          quitter le shop (passe au round suivant)\n\n"
