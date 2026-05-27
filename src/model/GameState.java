@@ -5,12 +5,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+
 import domain.Blind;
 import domain.Card;
 import domain.Deck;
 import domain.Shop;
 import domain.consummables.Planet;
 import domain.hand.HandType;
+import domain.hand.combinations.PlayedHand;
 
 public class GameState {
 
@@ -38,6 +41,7 @@ public class GameState {
 	private final List<Card> selectedCards;
 	private final Map<HandType, Integer> handLevels;
 	private final Map<HandType, Integer> playedHandStats;
+	private Optional<PlayedHand> previewHand;
 //  private final List<Joker> currentJokers;
 
 	private GamePhase phase;
@@ -67,6 +71,7 @@ public class GameState {
 
 		this.handLevels = new HashMap<HandType, Integer>();
 		this.playedHandStats = new HashMap<HandType, Integer>();
+		this.previewHand = Optional.empty();
 
 		this.currentDeck.generateBaseDeck();
 		this.setBlinds();
@@ -354,6 +359,14 @@ public class GameState {
 	public void setPhase(GamePhase phase) {
 		Objects.requireNonNull(phase);
 		this.phase = phase;
+	}
+	
+	public void setPreviewHand(Optional<PlayedHand> preview) {
+		this.previewHand = preview;
+	}
+	
+	public Optional<PlayedHand> getPreviewHand() {
+		return this.previewHand;
 	}
 
 	/**

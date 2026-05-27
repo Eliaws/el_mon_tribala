@@ -1,11 +1,10 @@
 package view;
 
+import java.util.List;
 import controller.PlayResult;
 import model.GameState;
 
 public sealed interface View permits ConsoleView {
-
-	void run();
 
 	void render(GameState state);
 
@@ -14,4 +13,6 @@ public sealed interface View permits ConsoleView {
 	void renderInvalidInput(GameState state, String message);
 
 	void renderPlayResult(GameState state, PlayResult result);
+	
+	List<String> getUserInput(GameState state);
 }
