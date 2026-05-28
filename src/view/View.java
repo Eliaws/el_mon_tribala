@@ -4,7 +4,7 @@ import java.util.List;
 import controller.PlayResult;
 import model.GameState;
 
-public sealed interface View permits ConsoleView {
+public sealed interface View permits ConsoleView, ZenView {
 
 	void render(GameState state);
 
