@@ -1,10 +1,10 @@
 package view;
 
-import controller.GameController;
-import controller.PlayResult;
 import domain.Blind;
 import domain.Card;
+import domain.Shop;
 import domain.Suit;
+import domain.consummables.Planet;
 import domain.hand.HandType;
 import domain.hand.combinations.PlayedHand;
 import model.GamePhase;
@@ -36,6 +36,7 @@ public final class ZenView implements View {
 	private final HashMap<String, Rect> buttons = new HashMap<String, Rect>();
 
 	private final Map<Card, BufferedImage> cardsTextures = new HashMap<Card, BufferedImage>();
+	private final Map<Planet, BufferedImage> planetsTextures = new HashMap<Planet, BufferedImage>();
 	private static final String[] BLIND_LABELS = { "Small Blind", "Big Blind", "Boss Blind" };
 
 	public ZenView() {
@@ -118,6 +119,27 @@ public final class ZenView implements View {
 		// Round end
 		buttons.put("roundEnd", new Rect((int) ((screenWidth / 3 + screenWidth / 5) - screenWidth / 10),
 				screenHeight / 3 + screenHeight / 30, screenWidth / 10 * 2, screenHeight / 10));
+
+		// buy planets
+		int planetHeight = (int) (screenHeight / 4.5);
+		int planetWidth = (int) (planetHeight * ratio);
+
+		int planetSpacing = (int) (planetWidth * 1.1);
+		int planetsStartX = screenWidth / 3 + screenHeight / 50;
+		int y = screenHeight / 3 + screenHeight / 50;
+
+		for (int i = 0; i < Shop.SLOT_COUNT; i++) {
+			buttons.put("planet" + String.valueOf(i),
+					new Rect(planetsStartX + (i * planetSpacing), y, planetWidth, planetHeight));
+		}
+
+		// close shop
+		buttons.put("exitShop",
+				new Rect(screenWidth / 3 + buttons.get("planet2").width() * 3 + screenHeight / 50 * 3,
+						buttons.get("planet2").y(),
+						(screenWidth / 5 * 2) - buttons.get("planet2").width() * 3 - screenHeight / 50 * 4,
+						buttons.get("planet2").height() / 2 - screenHeight / 50));
+
 	}
 
 	@Override
@@ -131,13 +153,13 @@ public final class ZenView implements View {
 		this.context.renderFrame(graphics -> {
 
 			graphics.clearRect(0, 0, context.getScreenInfo().width(), context.getScreenInfo().height());
-			renderPlaying(state, graphics);
-//			switch (state.getPhase()) {
-//			case PLAYING_BLIND -> renderPlaying(state, graphics);
-//			case SHOP -> renderShop(state, graphics);
-//			case GAME_OVER -> renderGameOver(state, graphics);
-//			case VICTORY -> renderVictory(state, graphics);
-//			}
+			switch (state.getPhase()) {
+			case PLAYING_BLIND -> renderPlaying(state, graphics);
+			case FINISHED_BLIND -> renderPlayResult(state, graphics);
+			case SHOP -> renderShop(state, graphics);
+			case GAME_OVER -> renderGameOver(state, graphics);
+			case VICTORY -> renderVictory(state, graphics);
+			}
 		});
 		return;
 	}
@@ -146,6 +168,58 @@ public final class ZenView implements View {
 	}
 
 	private void renderShop(GameState state, Graphics2D graphics) {
+		renderInfo(state, graphics);
+
+		int screenWidth = context.getScreenInfo().width();
+		int screenHeight = context.getScreenInfo().height();
+
+		graphics.setColor(Color.DARK_GRAY);
+		graphics.fillRoundRect(screenWidth / 3, screenHeight / 3, screenWidth / 5 * 2, screenHeight, 30, 30);
+
+		renderPlanets(state, graphics);
+
+		graphics.setColor(Color.RED);
+		graphics.fillRoundRect(buttons.get("exitShop").x(), buttons.get("exitShop").y(),
+				buttons.get("exitShop").width(), buttons.get("exitShop").height(), 30, 30);
+		graphics.setColor(Color.WHITE);
+		graphics.setFont(new Font("Arial", Font.BOLD, 16));
+		drawCenteredText("Next Round", graphics, buttons.get("exitShop").x() + buttons.get("exitShop").width() / 2,
+				buttons.get("exitShop").y() + buttons.get("exitShop").height() / 2 + 5);
+
+	}
+
+	private void renderPlanets(GameState state, Graphics2D graphics) {
+		List<Planet> planets = state.getShop().getOffers();
+		// planets
+		for (int i = 0; i < planets.size(); i++) {
+			BufferedImage image = null;
+			Planet currentPlanet = planets.get(i);
+
+			if (!this.planetsTextures.containsKey(currentPlanet)) {
+				String path = "/images/planets/" + currentPlanet.name() + ".png";
+				try {
+					InputStream input = ZenView.class.getResourceAsStream(path);
+					image = ImageIO.read(input);
+					this.planetsTextures.put(currentPlanet, image);
+				} catch (Exception e) {
+//					IO.println(path);
+//					e.printStackTrace();
+				}
+			}
+			graphics.drawImage(planetsTextures.getOrDefault(currentPlanet, this.cardBack),
+					buttons.get("planet" + String.valueOf(i)).x(), buttons.get("planet" + String.valueOf(i)).y(),
+					buttons.get("planet" + String.valueOf(i)).width(),
+					buttons.get("planet" + String.valueOf(i)).height(), null);
+			graphics.setColor(Color.ORANGE);
+			graphics.setFont(new Font("Arial", Font.BOLD, 16));
+			drawCenteredText("$" + String.valueOf(Shop.PLANET_PRICE), graphics,
+					buttons.get("planet" + String.valueOf(i)).x()
+							+ buttons.get("planet" + String.valueOf(i)).width() / 2,
+					(int) (buttons.get("planet" + String.valueOf(i)).y()
+							+ buttons.get("planet" + String.valueOf(i)).height() * 1.1));
+
+		}
+
 	}
 
 	private void renderGameOver(GameState state, Graphics2D graphics) {
@@ -243,19 +317,31 @@ public final class ZenView implements View {
 		graphics.setColor(Color.WHITE);
 
 		// round info
-		graphics.setFont(new Font("Arial", Font.PLAIN, 30));
-		drawCenteredText(BLIND_LABELS[roundIndex], graphics, infoBarStart + infoBarWidth / 2, screenHeight / 10);
-		graphics.setFont(new Font("Arial", Font.PLAIN, 16));
-		drawCenteredText("Score at least", graphics, infoBarStart + infoBarWidth / 2, (int) (screenHeight / 20 * 3.5));
-		graphics.setFont(new Font("Arial", Font.PLAIN, 30));
-		drawCenteredText(String.valueOf(currentBlind.score()), graphics, infoBarStart + infoBarWidth / 2,
-				(int) (screenHeight / 20 * 4.5));
-		graphics.setFont(new Font("Arial", Font.PLAIN, 16));
-		drawCenteredText("Round", graphics, infoBarStart + infoBarWidth / 4, (int) (screenHeight / 20 * 5.75));
-		drawCenteredText("Score", graphics, infoBarStart + infoBarWidth / 4, (int) (screenHeight / 20 * 6.25));
-		graphics.setFont(new Font("Arial", Font.PLAIN, 22));
-		drawCenteredText(String.valueOf(state.getCurrentBlindScore()), graphics,
-				(int) (infoBarStart + infoBarWidth / 4 * 2.75), screenHeight / 20 * 6);
+		GamePhase currentPhase = state.getPhase();
+		if (currentPhase == GamePhase.PLAYING_BLIND) {
+			graphics.setFont(new Font("Arial", Font.PLAIN, 30));
+			drawCenteredText(BLIND_LABELS[roundIndex], graphics, infoBarStart + infoBarWidth / 2, screenHeight / 10);
+			graphics.setFont(new Font("Arial", Font.PLAIN, 16));
+			drawCenteredText("Score at least", graphics, infoBarStart + infoBarWidth / 2,
+					(int) (screenHeight / 20 * 3.5));
+			graphics.setColor(Color.RED);
+			graphics.setFont(new Font("Arial", Font.BOLD, 30));
+			drawCenteredText(String.valueOf(currentBlind.score()), graphics, infoBarStart + infoBarWidth / 2,
+					(int) (screenHeight / 20 * 4.5));
+			graphics.setColor(Color.WHITE);
+			graphics.setFont(new Font("Arial", Font.PLAIN, 16));
+			drawCenteredText("Round", graphics, infoBarStart + infoBarWidth / 4, (int) (screenHeight / 20 * 5.75));
+			drawCenteredText("Score", graphics, infoBarStart + infoBarWidth / 4, (int) (screenHeight / 20 * 6.25));
+			graphics.setFont(new Font("Arial", Font.PLAIN, 22));
+			drawCenteredText(String.valueOf(state.getCurrentBlindScore()), graphics,
+					(int) (infoBarStart + infoBarWidth / 4 * 2.75), screenHeight / 20 * 6);
+		}
+		if (currentPhase == GamePhase.SHOP) {
+			graphics.setFont(new Font("Arial", Font.PLAIN, 35));
+			drawCenteredText("SHOP", graphics, infoBarStart + infoBarWidth / 2, screenHeight / 6);
+			graphics.setFont(new Font("Arial", Font.PLAIN, 16));
+			drawCenteredText("Improve your run!", graphics, infoBarStart + infoBarWidth / 2, screenHeight / 6 * 2);
+		}
 
 		// current Hand
 		Optional<PlayedHand> playing;
@@ -266,68 +352,41 @@ public final class ZenView implements View {
 		}
 
 		// Hands
+		graphics.setColor(Color.WHITE);
 		graphics.setFont(new Font("Arial", Font.PLAIN, 22));
 		drawCenteredText("Hands", graphics, infoBarStart + infoBarWidth / 4, screenHeight / 20 * 12);
 		graphics.setFont(new Font("Arial", Font.PLAIN, 22));
+		graphics.setColor(Color.BLUE);
 		drawCenteredText(String.valueOf(state.getCurrentHandsPlay()) + " / " + String.valueOf(state.getMaxHands()),
 				graphics, infoBarStart + infoBarWidth / 4, screenHeight / 20 * 13);
 
 		// Discard
+		graphics.setColor(Color.WHITE);
 		graphics.setFont(new Font("Arial", Font.PLAIN, 22));
 		drawCenteredText("Discards", graphics, infoBarStart + infoBarWidth / 4 * 3, screenHeight / 20 * 12);
 		graphics.setFont(new Font("Arial", Font.PLAIN, 22));
+		graphics.setColor(Color.RED);
 		drawCenteredText(String.valueOf(state.getCurrentDiscards()) + " / " + String.valueOf(state.getMaxDiscards()),
 				graphics, infoBarStart + infoBarWidth / 4 * 3, screenHeight / 20 * 13);
 
 		// Game Info
+		graphics.setColor(Color.WHITE);
 		graphics.setFont(new Font("Arial", Font.PLAIN, 22));
 		drawCenteredText("Ante", graphics, infoBarStart + infoBarWidth / 4, screenHeight / 20 * 15);
 		graphics.setFont(new Font("Arial", Font.PLAIN, 22));
+		drawCenteredText("Round", graphics, infoBarStart + infoBarWidth / 4 * 3, screenHeight / 20 * 15);
+
+		graphics.setColor(Color.ORANGE);
+		graphics.setFont(new Font("Arial", Font.PLAIN, 22));
 		drawCenteredText(String.valueOf(state.getAnte()), graphics, infoBarStart + infoBarWidth / 4,
 				screenHeight / 20 * 16);
-
-		graphics.setFont(new Font("Arial", Font.PLAIN, 22));
-		drawCenteredText("Round", graphics, infoBarStart + infoBarWidth / 4 * 3, screenHeight / 20 * 15);
 		graphics.setFont(new Font("Arial", Font.PLAIN, 22));
 		drawCenteredText(String.valueOf(state.getRound()), graphics, infoBarStart + infoBarWidth / 4 * 3,
 				screenHeight / 20 * 16);
-	}
 
-	private String formatHandType(HandType type) {
-		return switch (type) {
-		case HIGH_CARD -> "High Card";
-		case PAIR -> "Pair";
-		case TWO_PAIR -> "Two Pair";
-		case THREE_OF_A_KIND -> "Three of a Kind";
-		case STRAIGHT -> "Straight";
-		case FLUSH -> "Flush";
-		case FULL_HOUSE -> "Full House";
-		case FOUR_OF_A_KIND -> "Four of a Kind";
-		case STRAIGHT_FLUSH -> "Straight Flush";
-		case ROYAL_FLUSH -> "Royal Flush";
-		case FIVE_OF_A_KIND -> "Five of a Kind";
-		case FLUSH_HOUSE -> "Flush House";
-		case FLUSH_FIVE -> "Flush Five";
-		};
-
-	}
-
-	private void drawCenteredText(String text, Graphics2D graphics, int x, int y) {
-		FontMetrics metrics = graphics.getFontMetrics();
-		int textWidth = metrics.stringWidth(text);
-		graphics.drawString(text, x - textWidth / 2, y);
-
-	}
-
-	private String formatSuit(Suit s) {
-		String out = "";
-		switch (s) {
-		case Clovers -> out = "space";
-		case Diamonds -> out = "death";
-		case Hearts -> out = "life";
-		case Spades -> out = "time";
-		}
-		return out;
+		graphics.setFont(new Font("Arial", Font.PLAIN, 22));
+		drawCenteredText("$" + String.valueOf(state.getDollars()), graphics, infoBarStart + infoBarWidth / 2,
+				screenHeight / 20 * 18);
 	}
 
 	@Override
@@ -342,13 +401,10 @@ public final class ZenView implements View {
 
 	}
 
-	private void renderPlayResult(GameState state, PlayResult result) {
-		context.renderFrame(graphics -> {
-			graphics.clearRect(0, 0, context.getScreenInfo().width(), context.getScreenInfo().height());
-			renderInfo(state, graphics);
-			renderRoundEnd(state, graphics);
-		});
-
+	private void renderPlayResult(GameState state, Graphics2D graphics) {
+		graphics.clearRect(0, 0, context.getScreenInfo().width(), context.getScreenInfo().height());
+		renderInfo(state, graphics);
+		renderRoundEnd(state, graphics);
 	}
 
 	private void renderRoundEnd(GameState state, Graphics2D graphics) {
@@ -410,12 +466,7 @@ public final class ZenView implements View {
 
 	private String detectClick(GameState state, Location mouseClick) {
 		switch (state.getPhase()) {
-		case GamePhase.PLAYING_BLIND -> {
-			if (state.getBlinds().get((state.getRound() - 1) % 3).score() < state.getCurrentBlindScore()) {
-				if (isButtonClick(mouseClick, state.getHandSize()) == 4) {
-					return "";
-				}
-			}
+		case PLAYING_BLIND -> {
 			int cardIndex = isClickCard(mouseClick, state.getHandSize());
 			if (cardIndex > -1) {
 				return String.valueOf(cardIndex);
@@ -433,8 +484,25 @@ public final class ZenView implements View {
 				}
 			}
 		}
-		case GamePhase.FINISHED_BLIND -> {
-
+		case FINISHED_BLIND -> {
+			if (state.getBlinds().get((state.getRound() - 1) % 3).score() < state.getCurrentBlindScore()) {
+				if (isButtonClick(mouseClick, state.getHandSize()) == 4) {
+					return "";
+				}
+			}
+		}
+		case SHOP -> {
+			int input = isButtonClick(mouseClick, state.getHandSize());
+			if (input != -1 && input < 3) {
+				return String.valueOf(input);
+			}
+			if (input == 3) {
+				return "e";
+			}
+		}
+		case GAME_OVER, VICTORY -> throw new UnsupportedOperationException("Unimplemented case: " + state.getPhase());
+		default -> {
+			return null;
 		}
 		}
 		return null;
@@ -455,6 +523,18 @@ public final class ZenView implements View {
 		}
 		if (buttons.get("roundEnd").isClicked(mouseClick)) {
 			return 4;
+		}
+		if (buttons.get("planet0").isClicked(mouseClick)) {
+			return 0;
+		}
+		if (buttons.get("planet1").isClicked(mouseClick)) {
+			return 1;
+		}
+		if (buttons.get("planet2").isClicked(mouseClick)) {
+			return 2;
+		}
+		if (buttons.get("exitShop").isClicked(mouseClick)) {
+			return 3;
 		}
 
 		return -1;
@@ -481,6 +561,43 @@ public final class ZenView implements View {
 		}
 
 		return -1;
+	}
+
+	private String formatHandType(HandType type) {
+		return switch (type) {
+		case HIGH_CARD -> "High Card";
+		case PAIR -> "Pair";
+		case TWO_PAIR -> "Two Pair";
+		case THREE_OF_A_KIND -> "Three of a Kind";
+		case STRAIGHT -> "Straight";
+		case FLUSH -> "Flush";
+		case FULL_HOUSE -> "Full House";
+		case FOUR_OF_A_KIND -> "Four of a Kind";
+		case STRAIGHT_FLUSH -> "Straight Flush";
+		case ROYAL_FLUSH -> "Royal Flush";
+		case FIVE_OF_A_KIND -> "Five of a Kind";
+		case FLUSH_HOUSE -> "Flush House";
+		case FLUSH_FIVE -> "Flush Five";
+		};
+
+	}
+
+	private void drawCenteredText(String text, Graphics2D graphics, int x, int y) {
+		FontMetrics metrics = graphics.getFontMetrics();
+		int textWidth = metrics.stringWidth(text);
+		graphics.drawString(text, x - textWidth / 2, y);
+
+	}
+
+	private String formatSuit(Suit s) {
+		String out = "";
+		switch (s) {
+		case Clovers -> out = "space";
+		case Diamonds -> out = "death";
+		case Hearts -> out = "life";
+		case Spades -> out = "time";
+		}
+		return out;
 	}
 
 //	public static void main(String[] args) {

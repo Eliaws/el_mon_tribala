@@ -95,6 +95,9 @@ public class GameController {
 
 	private void handleFinishedBlind() {
 		List<String> input = view.getUserInput(gameState);
+		if(input == null) {
+			return;
+		}
 		if (input.isEmpty()) {
 			winBlind();
 			return;
@@ -103,7 +106,7 @@ public class GameController {
 	
 	private void handleShop() {
 		List<String> input = view.getUserInput(gameState);
-		if (input.isEmpty()) {
+		if (input == null || input.isEmpty()) {
 			return;
 		}
 		String first = input.get(0);
@@ -463,6 +466,7 @@ public class GameController {
 		int handBonus = gameState.getMaxHands() - gameState.getCurrentHandsPlay();
 		int interest = Math.min(gameState.getDollars() / 5, 5);
 		gameState.addDollars(blind.reward() + handBonus + interest);
+		setPreviewSelection();
 		enterShop();
 	}
 
@@ -513,6 +517,7 @@ public class GameController {
 			return false;
 		}
 		Planet planet = shop.getOffers().get(offerIndex);
+		IO.println(planet.name());
 		gameState.addDollars(-Shop.PLANET_PRICE);
 		gameState.addPlanet(planet);
 		shop.remove(offerIndex);
