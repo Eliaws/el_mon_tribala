@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import controller.PlayResult;
 import domain.Blind;
 import domain.Card;
 import domain.Deck;
@@ -42,6 +43,7 @@ public class GameState {
 	private final Map<HandType, Integer> handLevels;
 	private final Map<HandType, Integer> playedHandStats;
 	private Optional<PlayedHand> previewHand;
+	private PlayResult lastResult; 
 //  private final List<Joker> currentJokers;
 
 	private GamePhase phase;
@@ -367,6 +369,14 @@ public class GameState {
 	
 	public Optional<PlayedHand> getPreviewHand() {
 		return this.previewHand;
+	}
+	
+	public void setLastResult(PlayResult lastResult) {
+		this.lastResult = lastResult;
+	}
+	
+	public PlayResult getLastResult() {
+		return this.lastResult;
 	}
 
 	/**

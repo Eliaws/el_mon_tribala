@@ -38,6 +38,7 @@ public class GameController {
 			view.render(gameState);
 			switch (gameState.getPhase()) {
 			case PLAYING_BLIND -> handlePlay();
+			case FINISHED_BLIND -> handleFinishedBlind();
 			case SHOP -> handleShop();
 			case GAME_OVER, VICTORY -> handleEnd();
 			}
@@ -46,7 +47,7 @@ public class GameController {
 
 	private void handlePlay() {
 		List<String> input = view.getUserInput(gameState);
-		if (input.isEmpty()) {
+		if (input == null || input.isEmpty()) {
 			return;
 		}
 		String first = input.get(0);
@@ -92,6 +93,14 @@ public class GameController {
 
 	}
 
+	private void handleFinishedBlind() {
+		List<String> input = view.getUserInput(gameState);
+		if (input.isEmpty()) {
+			winBlind();
+			return;
+		}
+	}
+	
 	private void handleShop() {
 		List<String> input = view.getUserInput(gameState);
 		if (input.isEmpty()) {
@@ -103,7 +112,6 @@ public class GameController {
 		case "e":
 		case "exit":
 			exitShop();
-			IO.println("test");
 			return;
 		case "h":
 		case "help":
@@ -281,6 +289,7 @@ public class GameController {
 		}
 		var selectedCards = gameState.getSelectedCards();
 		selectedCards.remove(hand.get(index));
+		setPreviewSelection();
 		return true;
 	}
 
@@ -301,8 +310,9 @@ public class GameController {
 		var selected = gameState.getSelectedCards();
 		if (selected.isEmpty()) {
 			this.gameState.setPreviewHand(Optional.empty());
+		} else {
+			this.gameState.setPreviewHand(Optional.of(HandEvaluator.evaluate(selected)));
 		}
-		this.gameState.setPreviewHand(Optional.of(HandEvaluator.evaluate(selected)));
 	}
 
 	/**
@@ -352,6 +362,7 @@ public class GameController {
 		gameState.getCurrentHand().removeAll(selectedCards);
 		selectedCards.clear();
 		gameState.setCurrentDiscards(gameState.getCurrentDiscards() + 1);
+		setPreviewSelection();
 		draw();
 	}
 
@@ -382,13 +393,13 @@ public class GameController {
 	 *         {@code null} si l'action n'a pas pu être effectuée (mauvaise phase,
 	 *         sélection vide)
 	 */
-	public PlayResult play() {
+	public void play() {
 		if (gameState.getPhase() != GamePhase.PLAYING_BLIND) {
-			return null;
+			return;
 		}
 		var selectedCards = gameState.getSelectedCards();
 		if (selectedCards.isEmpty()) {
-			return null;
+			return;
 		}
 		List<Card> playedCards = List.copyOf(selectedCards);
 		PlayedHand played = HandEvaluator.evaluate(playedCards);
@@ -405,14 +416,14 @@ public class GameController {
 			if (isGameWon()) {
 				winGame();
 			} else {
-				winBlind();
+				gameState.setLastResult(new PlayResult(played, addedScore, playedCards));
+				gameState.setPhase(GamePhase.FINISHED_BLIND);
 			}
 		} else if (isCurrentBlindLost()) {
 			looseBlind();
 		} else {
 			draw();
 		}
-		return new PlayResult(played, addedScore, playedCards);
 	}
 
 	/**
