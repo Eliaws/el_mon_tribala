@@ -81,14 +81,14 @@ public class GameController {
 		case "q":
 			running = false;
 			return;
-		case "invalid":
-			view.renderInvalidInput(gameState, input.get(1));
-			return;
 		}
 
 		for (String s : input) {
-			int index = Integer.parseInt(s);
-			toggle(index);
+			if (!s.chars().allMatch(Character::isDigit)) {
+				gameState.setMessage("Commande non disponible ici");
+				return;
+			}
+			toggle(Integer.parseInt(s));
 		}
 
 	}
@@ -129,9 +129,9 @@ public class GameController {
 			if (!buyPlanet(n)) {
 				int price = Shop.PLANET_PRICE;
 				if (gameState.getDollars() < price) {
-					view.renderInvalidInput(gameState, "Pas assez de dollars (besoin $" + price + ")");
+					gameState.setMessage("Pas assez de dollars (besoin $" + price + ")");
 				} else {
-					view.renderInvalidInput(gameState, "Offre indisponible");
+					gameState.setMessage("Offre indisponible");
 				}
 			}
 		}
@@ -158,7 +158,7 @@ public class GameController {
 			running = false;
 			return;
 		default:
-			view.renderInvalidInput(gameState, first);
+			gameState.setMessage("Commande non disponible ici");
 		}
 	}
 
@@ -260,6 +260,7 @@ public class GameController {
 		}
 		var selectedCards = gameState.getSelectedCards();
 		if (selectedCards.size() >= gameState.getMaxSelected()) {
+			gameState.setMessage("Sélection max atteinte (" + gameState.getMaxSelected() + " cartes)");
 			return false;
 		}
 		Card card = hand.get(index);
@@ -357,6 +358,14 @@ public class GameController {
 			return;
 		}
 		var selectedCards = gameState.getSelectedCards();
+		if (selectedCards.isEmpty()) {
+			gameState.setMessage("Aucune carte sélectionnée");
+			return;
+		}
+		if (!canDiscard()) {
+			gameState.setMessage("Plus de discards disponibles (" + gameState.getMaxDiscards() + " max)");
+			return;
+		}
 		var deck = gameState.getCurrentDeck();
 		deck.discard(selectedCards);
 		gameState.getCurrentHand().removeAll(selectedCards);
@@ -399,6 +408,7 @@ public class GameController {
 		}
 		var selectedCards = gameState.getSelectedCards();
 		if (selectedCards.isEmpty()) {
+			gameState.setMessage("Aucune carte sélectionnée");
 			return;
 		}
 		List<Card> playedCards = List.copyOf(selectedCards);
