@@ -59,6 +59,12 @@ public final class ConsoleView implements View {
 		case GAME_OVER -> renderGameOver(state, (state.getRound() - 1) % 3, state.getCurrentBlindScore());
 		case VICTORY -> renderVictory(state);
 		}
+		String message = state.getMessage();
+		if (message != null && !message.isEmpty()) {
+			System.out.println();
+			System.out.println(YELLOW + message + RESET);
+			state.setMessage(null);
+		}
 	}
 
 	public List<String> getUserInput(GameState state) {
@@ -66,42 +72,45 @@ public final class ConsoleView implements View {
 		if (!scanner.hasNextLine()) {
 			return List.of("q");
 		}
-		List<String> input = List.of(scanner.nextLine().trim().toLowerCase().replace(",", " ").split("\\s+"));
-
-		if (input.get(0).equals("p") || input.get(0).equals("play") || input.get(0).equals("d")
-				|| input.get(0).equals("discard") || input.get(0).equals("h") || input.get(0).equals("help")
-				|| input.get(0).equals("s") || input.get(0).equals("r") || input.get(0).equals("q")
-				|| input.get(0).equals("quit") || input.get(0).equals("c") || input.get(0).equals("?") || input.get(0).equals("e")) {
-			return input;
-		} else {
-			try {
-				ArrayList<String> out = new ArrayList<String>();
-				for (int i = 0; i < input.size(); i++) {
-					Integer n = parseInt(input.get(i));
-					if (n == null) {
-						continue;
-					}
-					if (state != null && (n > state.getHandSize() || n <= 0)) {
-						return List.of("invalid", "OutOfBoundsException");
-					}
-					n -= 1;
-					out.add(n.toString());
-				}
-				return out;
-			} catch (NumberFormatException _) {
-				return List.of("invalid", "invalidCommand");
-			}
+		String line = scanner.nextLine().trim().toLowerCase();
+		if (line.isEmpty()) {
+			return List.of();
 		}
+		List<String> input = List.of(line.replace(",", " ").split("\\s+"));
+
+		String head = input.get(0);
+		boolean isCommand = switch (head) {
+		case "p", "play", "d", "discard", "c", "clear", "r", "rank",
+				"s", "suit", "h", "help", "?", "q", "e", "exit", "restart" -> true;
+		default -> false;
+		};
+		if (isCommand) {
+			return input;
+		}
+		ArrayList<String> out = new ArrayList<String>();
+		for (String token : input) {
+			Integer n = parseInt(token);
+			if (n == null) {
+				return invalid(state, "Commande inconnue : « " + token + " »");
+			}
+			if (state != null && (n > state.getHandSize() || n <= 0)) {
+				return invalid(state, "Index hors main (1-" + state.getHandSize() + ") : " + n);
+			}
+			out.add(String.valueOf(n - 1));
+		}
+		return out;
 	}
 
-	@Override
-	public void renderInvalidInput(GameState state, String message) {
-		renderInvalidInput(message);
-	}
-
-	private void renderInvalidInput(String input) {
+	/**
+	 * Affiche un message d'erreur de saisie puis redemande une entrée. Comme aucun
+	 * render() n'a lieu entre-temps, le message reste à l'écran jusqu'au prochain
+	 * input reçu. Propre à la saisie texte de la console : les erreurs de saisie n'ont de
+	 * sens que pour le cli (ZenView se pilote au clic donc pas de saisie invalide possible).
+	 */
+	private List<String> invalid(GameState state, String message) {
 		System.out.println();
-		System.out.println(YELLOW + input + RESET);
+		System.out.println(YELLOW + message + RESET);
+		return getUserInput(state);
 	}
 
 	@Override
