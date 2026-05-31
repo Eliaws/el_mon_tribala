@@ -54,8 +54,9 @@ public final class ConsoleView implements View {
 		switch (state.getPhase()) {
 		case PLAYING_BLIND ->
 			renderPlaying(state, (state.getRound() - 1) % 3, state.getBlinds().get((state.getRound() - 1) % 3).score(), state.getPreviewHand());
+		case FINISHED_BLIND -> renderPlayResult(state);
 		case SHOP -> renderShop(state);
-		case GAME_OVER -> renderGameOver(state, state.getRound(), state.getCurrentBlindScore());
+		case GAME_OVER -> renderGameOver(state, (state.getRound() - 1) % 3, state.getCurrentBlindScore());
 		case VICTORY -> renderVictory(state);
 		}
 	}
@@ -143,8 +144,8 @@ public final class ConsoleView implements View {
 		getUserInput(null);
 	}
 
-	@Override
-	public void renderPlayResult(GameState state, PlayResult result) {
+	private void renderPlayResult(GameState state) {
+		PlayResult result = state.getLastResult();
 		System.out.print(CLEAR_SCREEN);
 		System.out.println(BOLD + CYAN + "═══ Main jouée ═══" + RESET);
 		System.out.println();
