@@ -33,16 +33,22 @@ public final class ZenView implements View {
 	private boolean isWindowOpen;
 	private BufferedImage cardBack;
 	private ApplicationContext context;
+	private Font font;
 	private final HashMap<String, Rect> buttons = new HashMap<String, Rect>();
-
 	private final Map<Card, BufferedImage> cardsTextures = new HashMap<Card, BufferedImage>();
 	private final Map<Planet, BufferedImage> planetsTextures = new HashMap<Planet, BufferedImage>();
 	private static final String[] BLIND_LABELS = { "Small Blind", "Big Blind", "Boss Blind" };
 
 	public ZenView() {
 		this.isWindowOpen = false;
-		try (InputStream input = ZenView.class.getResourceAsStream("/images/back.png")) {
+		try (InputStream input = ZenView.class.getResourceAsStream("/ressources/images/back.png")) {
 			this.cardBack = ImageIO.read(input);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		try {
+			this.font = Font.createFont(Font.TRUETYPE_FONT,
+					ZenView.class.getResourceAsStream("/ressources/fonts/Fool.ttf"));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -196,7 +202,7 @@ public final class ZenView implements View {
 			Planet currentPlanet = planets.get(i);
 
 			if (!this.planetsTextures.containsKey(currentPlanet)) {
-				String path = "/images/planets/" + currentPlanet.name() + ".png";
+				String path = "/ressources/images/planets/" + currentPlanet.name() + ".png";
 				try {
 					InputStream input = ZenView.class.getResourceAsStream(path);
 					image = ImageIO.read(input);
@@ -252,7 +258,8 @@ public final class ZenView implements View {
 			Card currentCard = hand.get(i);
 
 			if (!this.cardsTextures.containsKey(currentCard)) {
-				String path = "/images/" + formatSuit(currentCard.suit()) + "/" + currentCard.rank() + ".png";
+				String path = "/ressources/images/" + formatSuit(currentCard.suit()) + "/" + currentCard.rank()
+						+ ".png";
 				try {
 					InputStream input = ZenView.class.getResourceAsStream(path);
 					image = ImageIO.read(input);
@@ -318,7 +325,7 @@ public final class ZenView implements View {
 
 		// round info
 		GamePhase currentPhase = state.getPhase();
-		if (currentPhase == GamePhase.PLAYING_BLIND) {
+		if (currentPhase == GamePhase.PLAYING_BLIND || currentPhase == GamePhase.FINISHED_BLIND) {
 			graphics.setFont(new Font("Arial", Font.PLAIN, 30));
 			drawCenteredText(BLIND_LABELS[roundIndex], graphics, infoBarStart + infoBarWidth / 2, screenHeight / 10);
 			graphics.setFont(new Font("Arial", Font.PLAIN, 16));
@@ -344,11 +351,34 @@ public final class ZenView implements View {
 		}
 
 		// current Hand
+		// mult + chips
+		int spacing = screenWidth / 100;
+		int startX = screenWidth / 25 + spacing;
+		int width = (screenWidth / 5 - screenWidth / 25) / 2;
+
+		graphics.setColor(Color.BLUE);
+		graphics.fillRoundRect(startX, screenHeight / 20 * 9, width, screenHeight / 15, 30, 30);
+		graphics.setColor(Color.RED);
+		graphics.fillRoundRect(startX + spacing * 2 + width, screenHeight / 20 * 9, width, screenHeight / 15, 30, 30);
+		drawCenteredText("X", graphics, infoBarStart + infoBarWidth / 2,
+				screenHeight / 20 * 9 + screenHeight / 15 / 2 + 10);
+
+		// level
 		Optional<PlayedHand> playing;
+		graphics.setColor(Color.WHITE);
 		if ((playing = state.getPreviewHand()).isPresent()) {
-			graphics.setFont(new Font("Arial", Font.PLAIN, 20));
-			drawCenteredText(formatHandType(playing.get().type()), graphics, infoBarStart + infoBarWidth / 2,
-					(int) (screenHeight / 20 * 8));
+			HandType ht = playing.get().type();
+			int level = state.getHandLevels().getOrDefault(playing.get().type(), 0) + 1;
+			int mult = ht.baseMult() + ht.levelMult() * level;
+			int chips = ht.baseChips() + ht.levelChips() * level;
+			graphics.setFont(new Font("Arial", Font.PLAIN, 22));
+			drawCenteredText(formatHandType(playing.get().type()) + " lvl." + String.valueOf(level), graphics,
+					infoBarStart + infoBarWidth / 2, (int) (screenHeight / 20 * 8));
+			drawCenteredText(String.valueOf(chips), graphics, startX + screenHeight / 15,
+					screenHeight / 20 * 9 + screenHeight / 30 + 10);
+			drawCenteredText(String.valueOf(mult), graphics, startX + spacing * 2 + width + screenHeight / 15,
+					screenHeight / 20 * 9 + screenHeight / 30 + 10);
+
 		}
 
 		// Hands
@@ -587,6 +617,10 @@ public final class ZenView implements View {
 		int textWidth = metrics.stringWidth(text);
 		graphics.drawString(text, x - textWidth / 2, y);
 
+	}
+
+	private Font getFont(Float size) {
+		return this.font.deriveFont(size);
 	}
 
 	private String formatSuit(Suit s) {
