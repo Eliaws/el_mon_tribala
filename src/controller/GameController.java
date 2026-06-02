@@ -36,6 +36,7 @@ public class GameController {
 		start();
 		while (running) {
 			view.render(gameState);
+			gameState.setMessage(null);
 			switch (gameState.getPhase()) {
 			case PLAYING_BLIND -> handlePlay();
 			case FINISHED_BLIND -> handleFinishedBlind();
@@ -81,6 +82,9 @@ public class GameController {
 		case "q":
 			running = false;
 			return;
+		case "invalid":
+			gameState.setMessage(input.get(1));
+			return;
 		}
 
 		for (String s : input) {
@@ -121,6 +125,9 @@ public class GameController {
 		case "q":
 			running = false;
 			return;
+		case "invalid":
+			gameState.setMessage(input.get(1));
+			return;
 		}
 
 		char c = input.get(0).charAt(0);
@@ -156,6 +163,9 @@ public class GameController {
 			return;
 		case "q":
 			running = false;
+			return;
+		case "invalid":
+			gameState.setMessage(input.get(1));
 			return;
 		default:
 			gameState.setMessage("Commande non disponible ici");

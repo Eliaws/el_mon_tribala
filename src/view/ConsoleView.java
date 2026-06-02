@@ -63,7 +63,6 @@ public final class ConsoleView implements View {
 		if (message != null && !message.isEmpty()) {
 			System.out.println();
 			System.out.println(YELLOW + message + RESET);
-			state.setMessage(null);
 		}
 	}
 
@@ -91,26 +90,14 @@ public final class ConsoleView implements View {
 		for (String token : input) {
 			Integer n = parseInt(token);
 			if (n == null) {
-				return invalid(state, "Commande inconnue : « " + token + " »");
+				return List.of("invalid", "Commande inconnue : « " + token + " »");
 			}
 			if (state != null && (n > state.getHandSize() || n <= 0)) {
-				return invalid(state, "Index hors main (1-" + state.getHandSize() + ") : " + n);
+				return List.of("invalid", "Index hors main (1-" + state.getHandSize() + ") : " + n);
 			}
 			out.add(String.valueOf(n - 1));
 		}
 		return out;
-	}
-
-	/**
-	 * Affiche un message d'erreur de saisie puis redemande une entrée. Comme aucun
-	 * render() n'a lieu entre-temps, le message reste à l'écran jusqu'au prochain
-	 * input reçu. Propre à la saisie texte de la console : les erreurs de saisie n'ont de
-	 * sens que pour le cli (ZenView se pilote au clic donc pas de saisie invalide possible).
-	 */
-	private List<String> invalid(GameState state, String message) {
-		System.out.println();
-		System.out.println(YELLOW + message + RESET);
-		return getUserInput(state);
 	}
 
 	@Override
