@@ -9,7 +9,5 @@ public sealed interface View permits ConsoleView, ZenView {
 
 	void renderHelp();
 
-	void renderInvalidInput(GameState state, String message);
-	
 	List<String> getUserInput(GameState state);
 }

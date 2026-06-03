@@ -43,7 +43,8 @@ public class GameState {
 	private final Map<HandType, Integer> handLevels;
 	private final Map<HandType, Integer> playedHandStats;
 	private Optional<PlayedHand> previewHand;
-	private PlayResult lastResult; 
+	private PlayResult lastResult;
+	private String message;
 //  private final List<Joker> currentJokers;
 
 	private GamePhase phase;
@@ -377,6 +378,20 @@ public class GameState {
 	
 	public PlayResult getLastResult() {
 		return this.lastResult;
+	}
+
+	/**
+	 * Message transitoire (erreur de saisie, info) à afficher au prochain rendu.
+	 * Consommé une seule fois : la vue l'efface après affichage.
+	 *
+	 * @return le message courant, ou null si aucun
+	 */
+	public String getMessage() {
+		return this.message;
+	}
+
+	public void setMessage(String message) {
+		this.message = message;
 	}
 
 	/**
