@@ -49,6 +49,10 @@ public final class ZenView implements View {
 	private static final Color END_WIN = new Color(63, 185, 80);
 	private static final Color END_GOLD = new Color(241, 175, 60);
 
+	// Conteneurs (fonds) des éléments de la barre d'info latérale
+	private static final Color INFO_PANEL = new Color(18, 20, 30);
+	private static final Color INFO_PANEL_BORDER = new Color(60, 64, 80);
+
 	// Toast « main jouée » affiché en haut de la zone de jeu pendant la partie
 	private static final long TOAST_DURATION_MS = 4000;
 	private static final long TOAST_FADE_MS = 700;
@@ -573,6 +577,27 @@ public final class ZenView implements View {
 
 		}
 
+		// Conteneurs (fonds) autour de Hands / Discards / Ante / Round.
+		// Boxes centrées horizontalement sur le centre du texte (infoBarWidth/4 et
+		// /4*3) et verticalement sur le bloc libellé + valeur via les métriques.
+		int unit = screenHeight / 20;
+		int colMargin = infoBarWidth / 20;
+		int boxWidth = infoBarWidth / 2 - colMargin;
+		int leftBoxX = (infoBarStart + infoBarWidth / 4) - boxWidth / 2;
+		int rightBoxX = (infoBarStart + infoBarWidth / 4 * 3) - boxWidth / 2;
+
+		graphics.setFont(new Font("Arial", Font.PLAIN, 22));
+		FontMetrics infoMetrics = graphics.getFontMetrics();
+		int pad = unit / 4;
+		int boxHeight = infoMetrics.getAscent() + unit + infoMetrics.getDescent() + pad * 2;
+		int handsBoxY = screenHeight / 20 * 12 - infoMetrics.getAscent() - pad;
+		int anteBoxY = screenHeight / 20 * 15 - infoMetrics.getAscent() - pad;
+
+		drawInfoContainer(graphics, leftBoxX, handsBoxY, boxWidth, boxHeight); // Hands
+		drawInfoContainer(graphics, rightBoxX, handsBoxY, boxWidth, boxHeight); // Discards
+		drawInfoContainer(graphics, leftBoxX, anteBoxY, boxWidth, boxHeight); // Ante
+		drawInfoContainer(graphics, rightBoxX, anteBoxY, boxWidth, boxHeight); // Round
+
 		// Hands
 		graphics.setColor(Color.WHITE);
 		graphics.setFont(new Font("Arial", Font.PLAIN, 22));
@@ -807,6 +832,18 @@ public final class ZenView implements View {
 		int textWidth = metrics.stringWidth(text);
 		graphics.drawString(text, x - textWidth / 2, y);
 
+	}
+
+	/**
+	 * Dessine un conteneur (fond arrondi sombre + liseré) pour un élément de la
+	 * barre d'info latérale.
+	 */
+	private void drawInfoContainer(Graphics2D graphics, int x, int y, int width, int height) {
+		graphics.setColor(INFO_PANEL);
+		graphics.fillRoundRect(x, y, width, height, 18, 18);
+		graphics.setColor(INFO_PANEL_BORDER);
+		graphics.setStroke(new BasicStroke(2));
+		graphics.drawRoundRect(x, y, width, height, 18, 18);
 	}
 
 	private Font getFont(float size) {
