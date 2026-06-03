@@ -202,14 +202,14 @@ public final class ZenView implements View {
 			Planet currentPlanet = planets.get(i);
 
 			if (!this.planetsTextures.containsKey(currentPlanet)) {
-				String path = "/ressources/images/planets/" + currentPlanet.name() + ".png";
+				String path = "/ressources/images/planets/" + currentPlanet.name().toLowerCase() + ".png";
 				try {
 					InputStream input = ZenView.class.getResourceAsStream(path);
 					image = ImageIO.read(input);
 					this.planetsTextures.put(currentPlanet, image);
 				} catch (Exception e) {
-//					IO.println(path);
-//					e.printStackTrace();
+					IO.println(path);
+					e.printStackTrace();
 				}
 			}
 			graphics.drawImage(planetsTextures.getOrDefault(currentPlanet, this.cardBack),
