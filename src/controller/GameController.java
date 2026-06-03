@@ -150,7 +150,7 @@ public class GameController {
 
 	private void handleEnd() {
 		List<String> input = view.getUserInput(gameState);
-		if (input.isEmpty()) {
+		if (input == null || input.isEmpty()) {
 			return;
 		}
 		String first = input.get(0);
@@ -324,8 +324,11 @@ public class GameController {
 		var selected = gameState.getSelectedCards();
 		if (selected.isEmpty()) {
 			this.gameState.setPreviewHand(Optional.empty());
+			this.gameState.setPreviewScore(Optional.empty());
 		} else {
-			this.gameState.setPreviewHand(Optional.of(HandEvaluator.evaluate(selected)));
+			PlayedHand evaluated = HandEvaluator.evaluate(selected);
+			this.gameState.setPreviewHand(Optional.of(evaluated));
+			this.gameState.setPreviewScore(Optional.of(HandScorer.score(evaluated, gameState.getHandLevels())));
 		}
 	}
 
@@ -434,12 +437,12 @@ public class GameController {
 		gameState.getCurrentHand().removeAll(selectedCards);
 		selectedCards.clear();
 		gameState.setCurrentHandsPlay(gameState.getCurrentHandsPlay() + 1);
+		gameState.setLastResult(new PlayResult(played, addedScore, playedCards));
 
 		if (isCurrentBlindWon()) {
 			if (isGameWon()) {
 				winGame();
 			} else {
-				gameState.setLastResult(new PlayResult(played, addedScore, playedCards));
 				gameState.setPhase(GamePhase.FINISHED_BLIND);
 			}
 		} else if (isCurrentBlindLost()) {

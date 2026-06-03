@@ -1,5 +1,6 @@
 package view;
 
+import controller.PlayResult;
 import domain.Blind;
 import domain.Card;
 import domain.Shop;
@@ -7,6 +8,7 @@ import domain.Suit;
 import domain.consummables.Planet;
 import domain.hand.HandType;
 import domain.hand.combinations.PlayedHand;
+import domain.hand.scoring.Score;
 import model.GamePhase;
 import model.GameState;
 
@@ -19,6 +21,7 @@ import java.util.Optional;
 import com.github.forax.zen.*;
 import com.github.forax.zen.PointerEvent.Location;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -38,6 +41,19 @@ public final class ZenView implements View {
 	private final Map<Card, BufferedImage> cardsTextures = new HashMap<Card, BufferedImage>();
 	private final Map<Planet, BufferedImage> planetsTextures = new HashMap<Planet, BufferedImage>();
 	private static final String[] BLIND_LABELS = { "Small Blind", "Big Blind", "Boss Blind" };
+
+	// Palette des écrans de fin (Game Over / Victory)
+	private static final Color END_OVERLAY = new Color(0, 0, 0, 180);
+	private static final Color END_PANEL = new Color(16, 18, 28);
+	private static final Color END_LOSE = new Color(214, 60, 60);
+	private static final Color END_WIN = new Color(63, 185, 80);
+	private static final Color END_GOLD = new Color(241, 175, 60);
+
+	// Toast « main jouée » affiché en haut de la zone de jeu pendant la partie
+	private static final long TOAST_DURATION_MS = 4000;
+	private static final long TOAST_FADE_MS = 700;
+	private PlayResult lastShownResult;
+	private long resultShownAt;
 
 	public ZenView() {
 		this.isWindowOpen = false;
@@ -146,6 +162,14 @@ public final class ZenView implements View {
 						(screenWidth / 5 * 2) - buttons.get("planet2").width() * 3 - screenHeight / 50 * 4,
 						buttons.get("planet2").height() / 2 - screenHeight / 50));
 
+		// Play Again (Game Over / Victory)
+		int endPanelHeight = screenHeight * 2 / 3;
+		int endPanelY = (screenHeight - endPanelHeight) / 2;
+		int playAgainWidth = screenWidth / 5;
+		int playAgainHeight = screenHeight / 12;
+		buttons.put("playAgain", new Rect((screenWidth - playAgainWidth) / 2,
+				endPanelY + endPanelHeight - playAgainHeight - screenHeight / 30, playAgainWidth, playAgainHeight));
+
 	}
 
 	@Override
@@ -171,6 +195,64 @@ public final class ZenView implements View {
 	}
 
 	private void renderVictory(GameState state, Graphics2D graphics) {
+		renderPlaying(state, graphics);
+		List<String> lines = List.of(
+				"Round final : " + state.getRound(),
+				"Cash : $" + state.getDollars());
+		renderEndScreen(graphics, "YOU WIN!", END_WIN, "Tu as conquis les 8 Antes", lines, END_WIN);
+	}
+
+	/**
+	 * Dessine un écran de fin générique (panneau centré, titre, sous-titre, lignes
+	 * de stats et bouton « Play Again »). Ne fait que de la présentation : toutes
+	 * les valeurs sont lues depuis l'état.
+	 */
+	private void renderEndScreen(Graphics2D graphics, String title, Color accent, String subtitle,
+			List<String> lines, Color buttonColor) {
+		int screenWidth = context.getScreenInfo().width();
+		int screenHeight = context.getScreenInfo().height();
+
+		// voile sombre translucide par-dessus le plateau de jeu (toujours visible)
+		graphics.setColor(END_OVERLAY);
+		graphics.fillRect(0, 0, screenWidth, screenHeight);
+
+		// panneau central
+		int panelWidth = screenWidth / 2;
+		int panelHeight = screenHeight * 2 / 3;
+		int panelX = (screenWidth - panelWidth) / 2;
+		int panelY = (screenHeight - panelHeight) / 2;
+		graphics.setColor(END_PANEL);
+		graphics.fillRoundRect(panelX, panelY, panelWidth, panelHeight, 40, 40);
+		graphics.setColor(accent);
+		graphics.setStroke(new BasicStroke(4));
+		graphics.drawRoundRect(panelX, panelY, panelWidth, panelHeight, 40, 40);
+
+		// titre (police thématique)
+		graphics.setColor(accent);
+		graphics.setFont(getFont(screenHeight / 9f));
+		drawCenteredText(title, graphics, screenWidth / 2, panelY + panelHeight / 4);
+
+		// sous-titre
+		graphics.setColor(Color.WHITE);
+		graphics.setFont(new Font("Arial", Font.PLAIN, screenHeight / 36));
+		drawCenteredText(subtitle, graphics, screenWidth / 2, panelY + panelHeight / 4 + screenHeight / 16);
+
+		// lignes de stats
+		graphics.setFont(new Font("Arial", Font.PLAIN, screenHeight / 40));
+		int lineY = screenHeight / 2;
+		for (String line : lines) {
+			drawCenteredText(line, graphics, screenWidth / 2, lineY);
+			lineY += screenHeight / 22;
+		}
+
+		// bouton Play Again
+		Rect button = buttons.get("playAgain");
+		graphics.setColor(buttonColor);
+		graphics.fillRoundRect(button.x(), button.y(), button.width(), button.height(), 25, 25);
+		graphics.setColor(Color.WHITE);
+		graphics.setFont(new Font("Arial", Font.BOLD, screenHeight / 36));
+		drawCenteredText("Rejouer", graphics, button.x() + button.width() / 2,
+				button.y() + button.height() / 2 + screenHeight / 90);
 	}
 
 	private void renderShop(GameState state, Graphics2D graphics) {
@@ -229,6 +311,15 @@ public final class ZenView implements View {
 	}
 
 	private void renderGameOver(GameState state, Graphics2D graphics) {
+		renderPlaying(state, graphics);
+		int roundIndex = (state.getRound() - 1) % 3;
+		Blind currentBlind = state.getBlinds().get(roundIndex);
+		List<String> lines = List.of(
+				"Score : " + state.getCurrentBlindScore() + " / " + currentBlind.score(),
+				"Round atteint : " + state.getRound(),
+				"Cash : $" + state.getDollars());
+		renderEndScreen(graphics, "GAME OVER", END_LOSE,
+				"Battu à l'Ante " + state.getAnte() + " - " + BLIND_LABELS[roundIndex], lines, END_GOLD);
 	}
 
 	private void renderPlaying(GameState state, Graphics2D graphics) {
@@ -236,6 +327,109 @@ public final class ZenView implements View {
 		var selected = state.getSelectedCards();
 		renderGame(hand, selected, graphics);
 		renderInfo(state, graphics);
+		renderPlayedHandToast(state, graphics);
+	}
+
+	/**
+	 * Bandeau temporaire affiché en haut de la zone de jeu après une main jouée :
+	 * type de main + calcul {@code chips × mult = total}. Apparaît à chaque play,
+	 * se met à jour à la main suivante et disparaît en fondu après quelques
+	 * secondes. La donnée provient de {@code state.getLastResult()} ; seul le timing
+	 * d'affichage (présentation) est géré ici.
+	 */
+	private void renderPlayedHandToast(GameState state, Graphics2D graphics) {
+		if (state.getPhase() != GamePhase.PLAYING_BLIND) {
+			return;
+		}
+		PlayResult result = state.getLastResult();
+		if (result == null) {
+			return;
+		}
+		// début de blinde : aucune main jouée ce tour → on consomme un éventuel
+		// résultat résiduel (main gagnante de la blinde précédente) sans l'afficher
+		if (state.getCurrentHandsPlay() == 0) {
+			lastShownResult = result;
+			return;
+		}
+		long now = System.currentTimeMillis();
+		if (result != lastShownResult) {
+			lastShownResult = result;
+			resultShownAt = now;
+		}
+		long elapsed = now - resultShownAt;
+		if (elapsed > TOAST_DURATION_MS) {
+			return;
+		}
+		// fondu sur la fin de l'affichage
+		int alpha = 255;
+		if (elapsed > TOAST_DURATION_MS - TOAST_FADE_MS) {
+			alpha = (int) (255 * (TOAST_DURATION_MS - elapsed) / TOAST_FADE_MS);
+		}
+		alpha = Math.max(0, Math.min(255, alpha));
+
+		int screenWidth = context.getScreenInfo().width();
+		int screenHeight = context.getScreenInfo().height();
+
+		// centré horizontalement sur la zone des cartes (2/3 droite de l'écran)
+		int cardHeight = screenHeight / 5;
+		double ratio = 69.0 / 106.0;
+		int cardWidth = (int) (cardHeight * ratio);
+		int cardSpacing = (int) (cardWidth * 0.8);
+		int totalWidth = ((state.getHandSize() - 1) * cardSpacing) + cardWidth;
+		int startX = (screenWidth - totalWidth) / 3 * 2;
+		int centerX = startX + totalWidth / 2;
+
+		int panelWidth = (int) (totalWidth * 0.7);
+		int panelHeight = screenHeight / 9;
+		int panelX = centerX - panelWidth / 2;
+		int panelY = screenHeight / 40;
+
+		graphics.setColor(new Color(16, 18, 28, alpha * 200 / 255));
+		graphics.fillRoundRect(panelX, panelY, panelWidth, panelHeight, 24, 24);
+		graphics.setColor(new Color(241, 175, 60, alpha));
+		graphics.setStroke(new BasicStroke(3));
+		graphics.drawRoundRect(panelX, panelY, panelWidth, panelHeight, 24, 24);
+
+		// type de main
+		graphics.setColor(new Color(241, 175, 60, alpha));
+		graphics.setFont(getFont(panelHeight / 2.6f));
+		drawCenteredText(formatHandType(result.hand().type()), graphics, centerX, panelY + panelHeight * 2 / 5);
+
+		// calcul chips × mult = total
+		graphics.setFont(new Font("Arial", Font.BOLD, panelHeight / 4));
+		drawScoreFormula(graphics, centerX, panelY + panelHeight * 4 / 5, result.score().chips(),
+				result.score().mult(), result.score().total(), alpha);
+	}
+
+	/**
+	 * Dessine, centré sur {@code centerX}, la formule de score « chips × mult =
+	 * total » avec les chips en bleu, le mult en rouge et le total en vert.
+	 */
+	private void drawScoreFormula(Graphics2D graphics, int centerX, int y, int chips, int mult, int total, int alpha) {
+		String sChips = String.valueOf(chips);
+		String sMult = String.valueOf(mult);
+		String sTotal = String.valueOf(total);
+		String times = "  ×  ";
+		String equals = "  =  ";
+		FontMetrics metrics = graphics.getFontMetrics();
+		int fullWidth = metrics.stringWidth(sChips + times + sMult + equals + sTotal);
+		int x = centerX - fullWidth / 2;
+		Color neutral = new Color(225, 225, 225, alpha);
+
+		graphics.setColor(new Color(80, 140, 255, alpha));
+		graphics.drawString(sChips, x, y);
+		x += metrics.stringWidth(sChips);
+		graphics.setColor(neutral);
+		graphics.drawString(times, x, y);
+		x += metrics.stringWidth(times);
+		graphics.setColor(new Color(230, 80, 80, alpha));
+		graphics.drawString(sMult, x, y);
+		x += metrics.stringWidth(sMult);
+		graphics.setColor(neutral);
+		graphics.drawString(equals, x, y);
+		x += metrics.stringWidth(equals);
+		graphics.setColor(new Color(80, 200, 110, alpha));
+		graphics.drawString(sTotal, x, y);
 	}
 
 	private void renderGame(List<Card> hand, List<Card> selected, Graphics2D graphics) {
@@ -366,17 +560,15 @@ public final class ZenView implements View {
 		// level
 		Optional<PlayedHand> playing;
 		graphics.setColor(Color.WHITE);
-		if ((playing = state.getPreviewHand()).isPresent()) {
-			HandType ht = playing.get().type();
+		if ((playing = state.getPreviewHand()).isPresent() && state.getPreviewScore().isPresent()) {
 			int level = state.getHandLevels().getOrDefault(playing.get().type(), 0) + 1;
-			int mult = ht.baseMult() + ht.levelMult() * level;
-			int chips = ht.baseChips() + ht.levelChips() * level;
+			Score preview = state.getPreviewScore().get();
 			graphics.setFont(new Font("Arial", Font.PLAIN, 22));
 			drawCenteredText(formatHandType(playing.get().type()) + " lvl." + String.valueOf(level), graphics,
 					infoBarStart + infoBarWidth / 2, (int) (screenHeight / 20 * 8));
-			drawCenteredText(String.valueOf(chips), graphics, startX + screenHeight / 15,
+			drawCenteredText(String.valueOf(preview.chips()), graphics, startX + screenHeight / 15,
 					screenHeight / 20 * 9 + screenHeight / 30 + 10);
-			drawCenteredText(String.valueOf(mult), graphics, startX + spacing * 2 + width + screenHeight / 15,
+			drawCenteredText(String.valueOf(preview.mult()), graphics, startX + spacing * 2 + width + screenHeight / 15,
 					screenHeight / 20 * 9 + screenHeight / 30 + 10);
 
 		}
@@ -421,12 +613,6 @@ public final class ZenView implements View {
 
 	@Override
 	public void renderHelp() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void renderInvalidInput(GameState state, String message) {
 		// TODO Auto-generated method stub
 
 	}
@@ -530,7 +716,11 @@ public final class ZenView implements View {
 				return "e";
 			}
 		}
-		case GAME_OVER, VICTORY -> throw new UnsupportedOperationException("Unimplemented case: " + state.getPhase());
+		case GAME_OVER, VICTORY -> {
+			if (buttons.get("playAgain").isClicked(mouseClick)) {
+				return "r";
+			}
+		}
 		default -> {
 			return null;
 		}
@@ -619,7 +809,10 @@ public final class ZenView implements View {
 
 	}
 
-	private Font getFont(Float size) {
+	private Font getFont(float size) {
+		if (this.font == null) {
+			return new Font("Arial", Font.BOLD, (int) size);
+		}
 		return this.font.deriveFont(size);
 	}
 

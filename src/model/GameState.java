@@ -15,6 +15,7 @@ import domain.Shop;
 import domain.consummables.Planet;
 import domain.hand.HandType;
 import domain.hand.combinations.PlayedHand;
+import domain.hand.scoring.Score;
 
 public class GameState {
 
@@ -43,6 +44,7 @@ public class GameState {
 	private final Map<HandType, Integer> handLevels;
 	private final Map<HandType, Integer> playedHandStats;
 	private Optional<PlayedHand> previewHand;
+	private Optional<Score> previewScore = Optional.empty();
 	private PlayResult lastResult;
 	private String message;
 //  private final List<Joker> currentJokers;
@@ -370,6 +372,14 @@ public class GameState {
 	
 	public Optional<PlayedHand> getPreviewHand() {
 		return this.previewHand;
+	}
+
+	public void setPreviewScore(Optional<Score> previewScore) {
+		this.previewScore = previewScore;
+	}
+
+	public Optional<Score> getPreviewScore() {
+		return this.previewScore;
 	}
 	
 	public void setLastResult(PlayResult lastResult) {
