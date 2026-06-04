@@ -200,9 +200,7 @@ public final class ZenView implements View {
 
 	private void renderVictory(GameState state, Graphics2D graphics) {
 		renderPlaying(state, graphics);
-		List<String> lines = List.of(
-				"Round final : " + state.getRound(),
-				"Cash : $" + state.getDollars());
+		List<String> lines = List.of("Round final : " + state.getRound(), "Cash : $" + state.getDollars());
 		renderEndScreen(graphics, "YOU WIN!", END_WIN, "Tu as conquis les 8 Antes", lines, END_WIN);
 	}
 
@@ -211,8 +209,8 @@ public final class ZenView implements View {
 	 * de stats et bouton « Play Again »). Ne fait que de la présentation : toutes
 	 * les valeurs sont lues depuis l'état.
 	 */
-	private void renderEndScreen(Graphics2D graphics, String title, Color accent, String subtitle,
-			List<String> lines, Color buttonColor) {
+	private void renderEndScreen(Graphics2D graphics, String title, Color accent, String subtitle, List<String> lines,
+			Color buttonColor) {
 		int screenWidth = context.getScreenInfo().width();
 		int screenHeight = context.getScreenInfo().height();
 
@@ -318,10 +316,8 @@ public final class ZenView implements View {
 		renderPlaying(state, graphics);
 		int roundIndex = (state.getRound() - 1) % 3;
 		Blind currentBlind = state.getBlinds().get(roundIndex);
-		List<String> lines = List.of(
-				"Score : " + state.getCurrentBlindScore() + " / " + currentBlind.score(),
-				"Round atteint : " + state.getRound(),
-				"Cash : $" + state.getDollars());
+		List<String> lines = List.of("Score : " + state.getCurrentBlindScore() + " / " + currentBlind.score(),
+				"Round atteint : " + state.getRound(), "Cash : $" + state.getDollars());
 		renderEndScreen(graphics, "GAME OVER", END_LOSE,
 				"Battu à l'Ante " + state.getAnte() + " - " + BLIND_LABELS[roundIndex], lines, END_GOLD);
 	}
@@ -338,8 +334,8 @@ public final class ZenView implements View {
 	 * Bandeau temporaire affiché en haut de la zone de jeu après une main jouée :
 	 * type de main + calcul {@code chips × mult = total}. Apparaît à chaque play,
 	 * se met à jour à la main suivante et disparaît en fondu après quelques
-	 * secondes. La donnée provient de {@code state.getLastResult()} ; seul le timing
-	 * d'affichage (présentation) est géré ici.
+	 * secondes. La donnée provient de {@code state.getLastResult()} ; seul le
+	 * timing d'affichage (présentation) est géré ici.
 	 */
 	private void renderPlayedHandToast(GameState state, Graphics2D graphics) {
 		if (state.getPhase() != GamePhase.PLAYING_BLIND) {
@@ -401,8 +397,8 @@ public final class ZenView implements View {
 
 		// calcul chips × mult = total
 		graphics.setFont(new Font("Arial", Font.BOLD, panelHeight / 4));
-		drawScoreFormula(graphics, centerX, panelY + panelHeight * 4 / 5, result.score().chips(),
-				result.score().mult(), result.score().total(), alpha);
+		drawScoreFormula(graphics, centerX, panelY + panelHeight * 4 / 5, result.score().chips(), result.score().mult(),
+				result.score().total(), alpha);
 	}
 
 	/**
@@ -565,15 +561,15 @@ public final class ZenView implements View {
 		Optional<PlayedHand> playing;
 		graphics.setColor(Color.WHITE);
 		if ((playing = state.getPreviewHand()).isPresent() && state.getPreviewScore().isPresent()) {
+			PlayedHand hand = playing.get();
 			int level = state.getHandLevels().getOrDefault(playing.get().type(), 0) + 1;
-			Score preview = state.getPreviewScore().get();
 			graphics.setFont(new Font("Arial", Font.PLAIN, 22));
 			drawCenteredText(formatHandType(playing.get().type()) + " lvl." + String.valueOf(level), graphics,
 					infoBarStart + infoBarWidth / 2, (int) (screenHeight / 20 * 8));
-			drawCenteredText(String.valueOf(preview.chips()), graphics, startX + screenHeight / 15,
+			drawCenteredText(String.valueOf(hand.type().baseChips()+((level-1)*hand.type().levelChips())), graphics, startX + screenHeight / 15,
 					screenHeight / 20 * 9 + screenHeight / 30 + 10);
-			drawCenteredText(String.valueOf(preview.mult()), graphics, startX + spacing * 2 + width + screenHeight / 15,
-					screenHeight / 20 * 9 + screenHeight / 30 + 10);
+			drawCenteredText(String.valueOf(hand.type().baseMult()+((level-1)*hand.type().levelMult())), graphics,
+					startX + spacing * 2 + width + screenHeight / 15, screenHeight / 20 * 9 + screenHeight / 30 + 10);
 
 		}
 
