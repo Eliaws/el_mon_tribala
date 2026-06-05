@@ -26,6 +26,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 
 import javax.imageio.ImageIO;
@@ -68,7 +69,7 @@ public final class ZenView implements View {
 		}
 		try {
 			this.font = Font.createFont(Font.TRUETYPE_FONT,
-					ZenView.class.getResourceAsStream("/ressources/fonts/Fool.ttf"));
+					ZenView.class.getResourceAsStream("/ressources/fonts/Letterstyle.ttf"));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -186,6 +187,12 @@ public final class ZenView implements View {
 
 		this.context.renderFrame(graphics -> {
 
+			graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+					RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+			graphics.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS,
+					RenderingHints.VALUE_FRACTIONALMETRICS_ON);
+
 			graphics.clearRect(0, 0, context.getScreenInfo().width(), context.getScreenInfo().height());
 			switch (state.getPhase()) {
 			case PLAYING_BLIND -> renderPlaying(state, graphics);
@@ -236,11 +243,11 @@ public final class ZenView implements View {
 
 		// sous-titre
 		graphics.setColor(Color.WHITE);
-		graphics.setFont(new Font("Arial", Font.PLAIN, screenHeight / 36));
+		graphics.setFont(getFont(screenHeight / 36));
 		drawCenteredText(subtitle, graphics, screenWidth / 2, panelY + panelHeight / 4 + screenHeight / 16);
 
 		// lignes de stats
-		graphics.setFont(new Font("Arial", Font.PLAIN, screenHeight / 40));
+		graphics.setFont(getFont(screenHeight / 40));
 		int lineY = screenHeight / 2;
 		for (String line : lines) {
 			drawCenteredText(line, graphics, screenWidth / 2, lineY);
@@ -252,7 +259,7 @@ public final class ZenView implements View {
 		graphics.setColor(buttonColor);
 		graphics.fillRoundRect(button.x(), button.y(), button.width(), button.height(), 25, 25);
 		graphics.setColor(Color.WHITE);
-		graphics.setFont(new Font("Arial", Font.BOLD, screenHeight / 36));
+		graphics.setFont(getFont(screenHeight / 36));
 		drawCenteredText("Rejouer", graphics, button.x() + button.width() / 2,
 				button.y() + button.height() / 2 + screenHeight / 90);
 	}
@@ -272,7 +279,7 @@ public final class ZenView implements View {
 		graphics.fillRoundRect(buttons.get("exitShop").x(), buttons.get("exitShop").y(),
 				buttons.get("exitShop").width(), buttons.get("exitShop").height(), 30, 30);
 		graphics.setColor(Color.WHITE);
-		graphics.setFont(new Font("Arial", Font.BOLD, 16));
+		graphics.setFont(getFont(16));
 		drawCenteredText("Next Round", graphics, buttons.get("exitShop").x() + buttons.get("exitShop").width() / 2,
 				buttons.get("exitShop").y() + buttons.get("exitShop").height() / 2 + 5);
 
@@ -301,7 +308,7 @@ public final class ZenView implements View {
 					buttons.get("planet" + String.valueOf(i)).width(),
 					buttons.get("planet" + String.valueOf(i)).height(), null);
 			graphics.setColor(Color.ORANGE);
-			graphics.setFont(new Font("Arial", Font.BOLD, 16));
+			graphics.setFont(getFont(16));
 			drawCenteredText("$" + String.valueOf(Shop.PLANET_PRICE), graphics,
 					buttons.get("planet" + String.valueOf(i)).x()
 							+ buttons.get("planet" + String.valueOf(i)).width() / 2,
@@ -396,7 +403,7 @@ public final class ZenView implements View {
 		drawCenteredText(formatHandType(result.hand().type()), graphics, centerX, panelY + panelHeight * 2 / 5);
 
 		// calcul chips × mult = total
-		graphics.setFont(new Font("Arial", Font.BOLD, panelHeight / 4));
+		graphics.setFont(getFont(panelHeight / 4));
 		drawScoreFormula(graphics, centerX, panelY + panelHeight * 4 / 5, result.score().chips(), result.score().mult(),
 				result.score().total(), alpha);
 	}
@@ -478,7 +485,7 @@ public final class ZenView implements View {
 		graphics.fillRoundRect(buttons.get("play").x(), buttons.get("play").y(), buttons.get("play").width(),
 				buttons.get("play").height(), 30, 30);
 		graphics.setColor(Color.WHITE);
-		graphics.setFont(new Font("Arial", Font.BOLD, 16));
+		graphics.setFont(getFont(16));
 		drawCenteredText("Discard", graphics, (buttons.get("discard").x() + buttons.get("discard").width() / 2),
 				buttons.get("discard").y() + buttons.get("discard").height() / 2 + 5);
 		drawCenteredText("Play", graphics, (buttons.get("play").x() + buttons.get("play").width() / 2),
@@ -491,11 +498,11 @@ public final class ZenView implements View {
 				buttons.get("rank").height(), 20, 20);
 		graphics.fillRoundRect(buttons.get("suit").x(), buttons.get("suit").y(), buttons.get("suit").width(),
 				buttons.get("suit").height(), 20, 20);
-		graphics.setFont(new Font("Arial", Font.PLAIN, 16));
+		graphics.setFont(getFont(16));
 		drawCenteredText("Sort Hand", graphics, buttons.get("discard").x() + buttonsTotalWidth / 2,
 				buttons.get("play").y() + buttons.get("rank").height() / 2);
 		graphics.setColor(Color.WHITE);
-		graphics.setFont(new Font("Arial", Font.PLAIN, 14));
+		graphics.setFont(getFont(14));
 		drawCenteredText("Rank", graphics, buttons.get("rank").x() + buttons.get("rank").width() / 2,
 				buttons.get("rank").y() + buttons.get("rank").height() / 2 + 5);
 		drawCenteredText("Suit", graphics, buttons.get("suit").x() + buttons.get("suit").width() / 2,
@@ -520,27 +527,27 @@ public final class ZenView implements View {
 		// round info
 		GamePhase currentPhase = state.getPhase();
 		if (currentPhase == GamePhase.PLAYING_BLIND || currentPhase == GamePhase.FINISHED_BLIND) {
-			graphics.setFont(new Font("Arial", Font.PLAIN, 30));
+			graphics.setFont(getFont(30));
 			drawCenteredText(BLIND_LABELS[roundIndex], graphics, infoBarStart + infoBarWidth / 2, screenHeight / 10);
-			graphics.setFont(new Font("Arial", Font.PLAIN, 16));
+			graphics.setFont(getFont(16));
 			drawCenteredText("Score at least", graphics, infoBarStart + infoBarWidth / 2,
 					(int) (screenHeight / 20 * 3.5));
 			graphics.setColor(Color.RED);
-			graphics.setFont(new Font("Arial", Font.BOLD, 30));
+			graphics.setFont(getFont(30));
 			drawCenteredText(String.valueOf(currentBlind.score()), graphics, infoBarStart + infoBarWidth / 2,
 					(int) (screenHeight / 20 * 4.5));
 			graphics.setColor(Color.WHITE);
-			graphics.setFont(new Font("Arial", Font.PLAIN, 16));
+			graphics.setFont(getFont(16));
 			drawCenteredText("Round", graphics, infoBarStart + infoBarWidth / 4, (int) (screenHeight / 20 * 5.75));
 			drawCenteredText("Score", graphics, infoBarStart + infoBarWidth / 4, (int) (screenHeight / 20 * 6.25));
-			graphics.setFont(new Font("Arial", Font.PLAIN, 22));
+			graphics.setFont(getFont(22));
 			drawCenteredText(String.valueOf(state.getCurrentBlindScore()), graphics,
 					(int) (infoBarStart + infoBarWidth / 4 * 2.75), screenHeight / 20 * 6);
 		}
 		if (currentPhase == GamePhase.SHOP) {
-			graphics.setFont(new Font("Arial", Font.PLAIN, 35));
+			graphics.setFont(getFont(35));
 			drawCenteredText("SHOP", graphics, infoBarStart + infoBarWidth / 2, screenHeight / 6);
-			graphics.setFont(new Font("Arial", Font.PLAIN, 16));
+			graphics.setFont(getFont(16));
 			drawCenteredText("Improve your run!", graphics, infoBarStart + infoBarWidth / 2, screenHeight / 6 * 2);
 		}
 
@@ -563,7 +570,8 @@ public final class ZenView implements View {
 		if ((playing = state.getPreviewHand()).isPresent() && state.getPreviewScore().isPresent()) {
 			PlayedHand hand = playing.get();
 			int level = state.getHandLevels().getOrDefault(playing.get().type(), 0) + 1;
-			graphics.setFont(new Font("Arial", Font.PLAIN, 22));
+			Score preview = state.getPreviewScore().get();
+			graphics.setFont(getFont(22));
 			drawCenteredText(formatHandType(playing.get().type()) + " lvl." + String.valueOf(level), graphics,
 					infoBarStart + infoBarWidth / 2, (int) (screenHeight / 20 * 8));
 			drawCenteredText(String.valueOf(hand.type().baseChips()+((level-1)*hand.type().levelChips())), graphics, startX + screenHeight / 15,
@@ -582,7 +590,7 @@ public final class ZenView implements View {
 		int leftBoxX = (infoBarStart + infoBarWidth / 4) - boxWidth / 2;
 		int rightBoxX = (infoBarStart + infoBarWidth / 4 * 3) - boxWidth / 2;
 
-		graphics.setFont(new Font("Arial", Font.PLAIN, 22));
+		graphics.setFont(getFont(22));
 		FontMetrics infoMetrics = graphics.getFontMetrics();
 		int pad = unit / 4;
 		int boxHeight = infoMetrics.getAscent() + unit + infoMetrics.getDescent() + pad * 2;
@@ -596,38 +604,38 @@ public final class ZenView implements View {
 
 		// Hands
 		graphics.setColor(Color.WHITE);
-		graphics.setFont(new Font("Arial", Font.PLAIN, 22));
+		graphics.setFont(getFont(22));
 		drawCenteredText("Hands", graphics, infoBarStart + infoBarWidth / 4, screenHeight / 20 * 12);
-		graphics.setFont(new Font("Arial", Font.PLAIN, 22));
+		graphics.setFont(getFont(22));
 		graphics.setColor(Color.BLUE);
 		drawCenteredText(String.valueOf(state.getCurrentHandsPlay()) + " / " + String.valueOf(state.getMaxHands()),
 				graphics, infoBarStart + infoBarWidth / 4, screenHeight / 20 * 13);
 
 		// Discard
 		graphics.setColor(Color.WHITE);
-		graphics.setFont(new Font("Arial", Font.PLAIN, 22));
+		graphics.setFont(getFont(22));
 		drawCenteredText("Discards", graphics, infoBarStart + infoBarWidth / 4 * 3, screenHeight / 20 * 12);
-		graphics.setFont(new Font("Arial", Font.PLAIN, 22));
+		graphics.setFont(getFont(22));
 		graphics.setColor(Color.RED);
 		drawCenteredText(String.valueOf(state.getCurrentDiscards()) + " / " + String.valueOf(state.getMaxDiscards()),
 				graphics, infoBarStart + infoBarWidth / 4 * 3, screenHeight / 20 * 13);
 
 		// Game Info
 		graphics.setColor(Color.WHITE);
-		graphics.setFont(new Font("Arial", Font.PLAIN, 22));
+		graphics.setFont(getFont(22));
 		drawCenteredText("Ante", graphics, infoBarStart + infoBarWidth / 4, screenHeight / 20 * 15);
-		graphics.setFont(new Font("Arial", Font.PLAIN, 22));
+		graphics.setFont(getFont(22));
 		drawCenteredText("Round", graphics, infoBarStart + infoBarWidth / 4 * 3, screenHeight / 20 * 15);
 
 		graphics.setColor(Color.ORANGE);
-		graphics.setFont(new Font("Arial", Font.PLAIN, 22));
+		graphics.setFont(getFont(22));
 		drawCenteredText(String.valueOf(state.getAnte()), graphics, infoBarStart + infoBarWidth / 4,
 				screenHeight / 20 * 16);
-		graphics.setFont(new Font("Arial", Font.PLAIN, 22));
+		graphics.setFont(getFont(22));
 		drawCenteredText(String.valueOf(state.getRound()), graphics, infoBarStart + infoBarWidth / 4 * 3,
 				screenHeight / 20 * 16);
 
-		graphics.setFont(new Font("Arial", Font.PLAIN, 22));
+		graphics.setFont(getFont(22));
 		drawCenteredText("$" + String.valueOf(state.getDollars()), graphics, infoBarStart + infoBarWidth / 2,
 				screenHeight / 20 * 18);
 	}
@@ -655,13 +663,13 @@ public final class ZenView implements View {
 		graphics.fillRoundRect(buttons.get("roundEnd").x(), buttons.get("roundEnd").y(),
 				buttons.get("roundEnd").width(), buttons.get("roundEnd").height(), 30, 30);
 		graphics.setColor(Color.WHITE);
-		graphics.setFont(new Font("Arial", Font.BOLD, 30));
+		graphics.setFont(getFont(30));
 		int roundIndex = (state.getRound() - 1) % 3;
 		int remainingHands = state.getMaxHands() - state.getCurrentHandsPlay();
 		drawCenteredText("Cash Out: $" + String.valueOf(state.getBlinds().get(roundIndex).reward() + remainingHands),
 				graphics, buttons.get("roundEnd").x() + buttons.get("roundEnd").width() / 2,
 				buttons.get("roundEnd").y() + buttons.get("roundEnd").height() / 2 + 10);
-		graphics.setFont(new Font("Arial", Font.PLAIN, 16));
+		graphics.setFont(getFont(16));
 		graphics.setColor(Color.WHITE);
 		graphics.drawString(BLIND_LABELS[roundIndex], screenWidth / 3 + screenWidth / 20, screenHeight / 32 * 17);
 		graphics.drawString(String.valueOf(remainingHands) + " Remaining Hands [$1 each]",
@@ -842,11 +850,15 @@ public final class ZenView implements View {
 		graphics.drawRoundRect(x, y, width, height, 18, 18);
 	}
 
+	// Facteur d'échelle appliqué à tout le texte (léger scale down global)
+	private static final float FONT_SCALE = 0.82f;
+
 	private Font getFont(float size) {
+		float scaled = size * FONT_SCALE;
 		if (this.font == null) {
-			return new Font("Arial", Font.BOLD, (int) size);
+			return new Font("Arial", Font.BOLD, (int) scaled);
 		}
-		return this.font.deriveFont(size);
+		return this.font.deriveFont(scaled);
 	}
 
 	private String formatSuit(Suit s) {
