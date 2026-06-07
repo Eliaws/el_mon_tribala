@@ -846,6 +846,9 @@ public final class ZenView implements View {
 			if (buttons.get("playAgain").isClicked(mouseClick)) {
 				return "r";
 			}
+			if(buttons.get("quit").isClicked(mouseClick)) {
+				return "q";
+			}
 		}
 		default -> {
 			return null;

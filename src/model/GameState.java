@@ -93,7 +93,8 @@ public class GameState {
 	public void setBlinds() {
 		blinds.clear();
 		ArrayList<Integer> anteRequirements = new ArrayList<Integer>(
-				List.of(100, 300, 800, 2000, 5000, 11000, 20000, 35000, 50000));
+				//List.of(100, 300, 800, 2000, 5000, 11000, 20000, 35000, 50000));
+				List.of(100, 300, 500, 900, 1200, 1700, 2000, 2500, 3500));
 		double currentAnteBase;
 		if (ante <= 8) {
 			currentAnteBase = anteRequirements.get(ante - 1);

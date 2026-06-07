@@ -19,19 +19,17 @@ L'architecture suit un découpage MVC :
 - JDK 25
 - Un terminal supportant les codes ANSI (couleurs)
 
-## Compilation & Lancement (provisoire)
+## Lancement
 
-Depuis la racine du projet :
+- Telecharger la release la plus récente.
+- éxecuter la commande suivante:
 
+Pour lancer avec l'interface graphique:
 ```
-cd src/
-```
-```
-java Main.java
+java -jar el_mon_tribala.jar zen
 ```
 
-<!-- ## Lancement
-
+Pour lancer dans la console:
 ```
-java -cp out Main
-``` -->
+java -jar el_mon_tribala.jar console
+```
