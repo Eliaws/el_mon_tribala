@@ -5,12 +5,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+
+import controller.PlayResult;
 import domain.Blind;
 import domain.Card;
 import domain.Deck;
 import domain.Shop;
 import domain.consummables.Planet;
 import domain.hand.HandType;
+import domain.hand.combinations.PlayedHand;
+import domain.hand.scoring.Score;
 
 public class GameState {
 
@@ -38,6 +43,10 @@ public class GameState {
 	private final List<Card> selectedCards;
 	private final Map<HandType, Integer> handLevels;
 	private final Map<HandType, Integer> playedHandStats;
+	private Optional<PlayedHand> previewHand;
+	private Optional<Score> previewScore = Optional.empty();
+	private PlayResult lastResult;
+	private String message;
 //  private final List<Joker> currentJokers;
 
 	private GamePhase phase;
@@ -67,6 +76,7 @@ public class GameState {
 
 		this.handLevels = new HashMap<HandType, Integer>();
 		this.playedHandStats = new HashMap<HandType, Integer>();
+		this.previewHand = Optional.empty();
 
 		this.currentDeck.generateBaseDeck();
 		this.setBlinds();
@@ -83,7 +93,8 @@ public class GameState {
 	public void setBlinds() {
 		blinds.clear();
 		ArrayList<Integer> anteRequirements = new ArrayList<Integer>(
-				List.of(100, 300, 800, 2000, 5000, 11000, 20000, 35000, 50000));
+				//List.of(100, 300, 800, 2000, 5000, 11000, 20000, 35000, 50000));
+				List.of(100, 300, 500, 900, 1200, 1700, 2000, 2500, 3500));
 		double currentAnteBase;
 		if (ante <= 8) {
 			currentAnteBase = anteRequirements.get(ante - 1);
@@ -354,6 +365,44 @@ public class GameState {
 	public void setPhase(GamePhase phase) {
 		Objects.requireNonNull(phase);
 		this.phase = phase;
+	}
+	
+	public void setPreviewHand(Optional<PlayedHand> preview) {
+		this.previewHand = preview;
+	}
+	
+	public Optional<PlayedHand> getPreviewHand() {
+		return this.previewHand;
+	}
+
+	public void setPreviewScore(Optional<Score> previewScore) {
+		this.previewScore = previewScore;
+	}
+
+	public Optional<Score> getPreviewScore() {
+		return this.previewScore;
+	}
+	
+	public void setLastResult(PlayResult lastResult) {
+		this.lastResult = lastResult;
+	}
+	
+	public PlayResult getLastResult() {
+		return this.lastResult;
+	}
+
+	/**
+	 * Message transitoire (erreur de saisie, info) à afficher au prochain rendu.
+	 * Consommé une seule fois : la vue l'efface après affichage.
+	 *
+	 * @return le message courant, ou null si aucun
+	 */
+	public String getMessage() {
+		return this.message;
+	}
+
+	public void setMessage(String message) {
+		this.message = message;
 	}
 
 	/**
