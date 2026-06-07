@@ -8,7 +8,6 @@ import domain.Suit;
 import domain.consummables.Planet;
 import domain.hand.HandType;
 import domain.hand.combinations.PlayedHand;
-import domain.hand.scoring.Score;
 import model.GamePhase;
 import model.GameState;
 
@@ -17,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 
 import com.github.forax.zen.*;
 import com.github.forax.zen.PointerEvent.Location;
@@ -25,7 +25,10 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
+import java.awt.GradientPaint;
 import java.awt.Graphics2D;
+import java.awt.MouseInfo;
+import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 
@@ -59,6 +62,8 @@ public final class ZenView implements View {
 	private static final long TOAST_FADE_MS = 700;
 	private PlayResult lastShownResult;
 	private long resultShownAt;
+	private final ArrayList<ArrayList<Integer[]>> starsLayers = new ArrayList<ArrayList<Integer[]>>();
+	private Point mouseCoords;
 
 	public ZenView() {
 		this.isWindowOpen = false;
@@ -77,7 +82,7 @@ public final class ZenView implements View {
 
 	private void openWindow(GameState state) {
 
-		Application.run(Color.WHITE, context -> {
+		Application.run(Color.BLACK, context -> {
 
 			this.isWindowOpen = true;
 			this.context = context;
@@ -85,9 +90,12 @@ public final class ZenView implements View {
 			setupButtons(state);
 			render(state);
 		});
-
 	}
 
+	public void closeWindow() {
+		this.context.dispose();
+	}
+	
 	private void setupButtons(GameState state) {
 
 		int screenWidth = context.getScreenInfo().width();
@@ -174,7 +182,10 @@ public final class ZenView implements View {
 		int playAgainHeight = screenHeight / 12;
 		buttons.put("playAgain", new Rect((screenWidth - playAgainWidth) / 2,
 				endPanelY + endPanelHeight - playAgainHeight - screenHeight / 30, playAgainWidth, playAgainHeight));
-
+		
+		// close button
+		int quitRadius = screenWidth / 40;
+		buttons.put("quit", new Rect((int) (screenWidth-(quitRadius*1.5)), quitRadius/2, quitRadius, quitRadius));
 	}
 
 	@Override
@@ -188,12 +199,11 @@ public final class ZenView implements View {
 		this.context.renderFrame(graphics -> {
 
 			graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-			graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
-					RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-			graphics.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS,
-					RenderingHints.VALUE_FRACTIONALMETRICS_ON);
+			graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+			graphics.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
 
 			graphics.clearRect(0, 0, context.getScreenInfo().width(), context.getScreenInfo().height());
+			drawBackground(graphics);
 			switch (state.getPhase()) {
 			case PLAYING_BLIND -> renderPlaying(state, graphics);
 			case FINISHED_BLIND -> renderPlayResult(state, graphics);
@@ -201,8 +211,93 @@ public final class ZenView implements View {
 			case GAME_OVER -> renderGameOver(state, graphics);
 			case VICTORY -> renderVictory(state, graphics);
 			}
+			drawQuitButton(graphics);
 		});
 		return;
+	}
+
+	private void drawQuitButton(Graphics2D graphics) {
+		int y = buttons.get("quit").y();
+		int x = buttons.get("quit").x();
+		int w = buttons.get("quit").width();
+		graphics.setColor(Color.DARK_GRAY);
+		graphics.fillOval(x, y, w, w);
+		graphics.setColor(Color.WHITE);
+		x += w/2;
+		y+= w/2;
+		w /=5;
+		graphics.drawLine(x-w, y-w, x+w, y+w);
+		graphics.drawLine(x+w, y-w, x-w, y+w);
+		
+	}
+
+	private void drawBackground(Graphics2D graphics) {
+		int screenWidth = context.getScreenInfo().width();
+		int screenHeight = context.getScreenInfo().height();
+		var gradient = new GradientPaint(0, 0, Color.BLACK, 0, screenHeight, new Color(25, 0, 50));
+		graphics.setPaint(gradient);
+		graphics.fillRect(0, 0, screenWidth, screenHeight);
+		Random rand = new Random();
+		if (starsLayers.isEmpty()) {
+			for (int j = 0; j < 3; j++) {
+				ArrayList<Integer[]> layer = new ArrayList<Integer[]>();
+				for (int i = 0; i < 500; i++) {
+					Integer[] coords = { rand.nextInt(-50, screenWidth + 50), rand.nextInt(-50, screenHeight + 50),
+							rand.nextInt(3) };
+					// star[0] = x coord, star[1] = y coord, star[2] type (x or crosss or circle) 
+					layer.add(coords);
+				}
+				starsLayers.add(layer);
+			}
+		}
+		int layer = 1;
+		for (ArrayList<Integer[]> stars : this.starsLayers) {
+			for (Integer[] star : stars) {
+				drawStar(star, layer, graphics);
+			}
+			layer++;
+		}
+	}
+
+	private void drawStar(Integer[] star, int layer, Graphics2D graphics) {
+		int layerVariance = 0;
+		switch (layer) {
+		case 3 -> {
+			graphics.setColor(Color.WHITE);
+			layerVariance = (int) (layer * 1.15);
+		}
+		case 2 -> {
+			graphics.setColor(Color.GRAY);
+			layerVariance = (int) (layer * 1.09);
+		}
+		case 1 -> {
+			graphics.setColor(Color.DARK_GRAY);
+			layerVariance = (int) (layer * 1.05);
+		}
+		}
+		int xModif = 0;
+		int yModif = 0;
+		if (this.mouseCoords != null) {
+			xModif = (int) (this.mouseCoords.getX() * (0.01 * layerVariance));
+			yModif = (int) (this.mouseCoords.getY() * (0.01 * layerVariance));
+		}
+		int size = 2;
+		switch (star[2]) {
+		case 0 -> {
+			graphics.fillOval(star[0] + xModif, star[1] + yModif, size * 2, size * 2);
+		}
+		case 1 -> {
+			graphics.drawLine(star[0] - size + xModif, star[1] - size + yModif, star[0] + size + xModif,
+					star[1] + size + yModif);
+			graphics.drawLine(star[0] + size + xModif, star[1] - size + yModif, star[0] - size + xModif,
+					star[1] + size + yModif);
+
+		}
+		default -> {
+			graphics.drawLine(star[0] + xModif, star[1] - size + yModif, star[0] + xModif, star[1] + size + yModif);
+			graphics.drawLine(star[0] - size + xModif, star[1] + yModif, star[0] + size + xModif, star[1] + yModif);
+		}
+		}
 	}
 
 	private void renderVictory(GameState state, Graphics2D graphics) {
@@ -238,7 +333,7 @@ public final class ZenView implements View {
 
 		// titre (police thématique)
 		graphics.setColor(accent);
-		graphics.setFont(getFont(screenHeight / 9f));
+		graphics.setFont(getFont(screenHeight / 12f));
 		drawCenteredText(title, graphics, screenWidth / 2, panelY + panelHeight / 4);
 
 		// sous-titre
@@ -399,11 +494,11 @@ public final class ZenView implements View {
 
 		// type de main
 		graphics.setColor(new Color(241, 175, 60, alpha));
-		graphics.setFont(getFont(panelHeight / 2.6f));
+		graphics.setFont(getFont(panelHeight / 4));
 		drawCenteredText(formatHandType(result.hand().type()), graphics, centerX, panelY + panelHeight * 2 / 5);
 
 		// calcul chips × mult = total
-		graphics.setFont(getFont(panelHeight / 4));
+		graphics.setFont(getFont(panelHeight / 5));
 		drawScoreFormula(graphics, centerX, panelY + panelHeight * 4 / 5, result.score().chips(), result.score().mult(),
 				result.score().total(), alpha);
 	}
@@ -499,6 +594,7 @@ public final class ZenView implements View {
 		graphics.fillRoundRect(buttons.get("suit").x(), buttons.get("suit").y(), buttons.get("suit").width(),
 				buttons.get("suit").height(), 20, 20);
 		graphics.setFont(getFont(16));
+		graphics.setColor(Color.LIGHT_GRAY);
 		drawCenteredText("Sort Hand", graphics, buttons.get("discard").x() + buttonsTotalWidth / 2,
 				buttons.get("play").y() + buttons.get("rank").height() / 2);
 		graphics.setColor(Color.WHITE);
@@ -520,7 +616,7 @@ public final class ZenView implements View {
 		int roundIndex = (state.getRound() - 1) % 3;
 		Blind currentBlind = state.getBlinds().get(roundIndex);
 
-		graphics.setColor(Color.DARK_GRAY);
+		graphics.setColor(new Color(70, 70, 70, 200));
 		graphics.fillRect(screenWidth / 25, 0, infoBarWidth, screenHeight);
 		graphics.setColor(Color.WHITE);
 
@@ -533,7 +629,7 @@ public final class ZenView implements View {
 			drawCenteredText("Score at least", graphics, infoBarStart + infoBarWidth / 2,
 					(int) (screenHeight / 20 * 3.5));
 			graphics.setColor(Color.RED);
-			graphics.setFont(getFont(30));
+			graphics.setFont(getFont(28));
 			drawCenteredText(String.valueOf(currentBlind.score()), graphics, infoBarStart + infoBarWidth / 2,
 					(int) (screenHeight / 20 * 4.5));
 			graphics.setColor(Color.WHITE);
@@ -560,6 +656,7 @@ public final class ZenView implements View {
 		graphics.setColor(Color.BLUE);
 		graphics.fillRoundRect(startX, screenHeight / 20 * 9, width, screenHeight / 15, 30, 30);
 		graphics.setColor(Color.RED);
+		graphics.setFont(getFont(20));
 		graphics.fillRoundRect(startX + spacing * 2 + width, screenHeight / 20 * 9, width, screenHeight / 15, 30, 30);
 		drawCenteredText("X", graphics, infoBarStart + infoBarWidth / 2,
 				screenHeight / 20 * 9 + screenHeight / 15 / 2 + 10);
@@ -570,13 +667,12 @@ public final class ZenView implements View {
 		if ((playing = state.getPreviewHand()).isPresent() && state.getPreviewScore().isPresent()) {
 			PlayedHand hand = playing.get();
 			int level = state.getHandLevels().getOrDefault(playing.get().type(), 0) + 1;
-			Score preview = state.getPreviewScore().get();
 			graphics.setFont(getFont(22));
 			drawCenteredText(formatHandType(playing.get().type()) + " lvl." + String.valueOf(level), graphics,
 					infoBarStart + infoBarWidth / 2, (int) (screenHeight / 20 * 8));
-			drawCenteredText(String.valueOf(hand.type().baseChips()+((level-1)*hand.type().levelChips())), graphics, startX + screenHeight / 15,
-					screenHeight / 20 * 9 + screenHeight / 30 + 10);
-			drawCenteredText(String.valueOf(hand.type().baseMult()+((level-1)*hand.type().levelMult())), graphics,
+			drawCenteredText(String.valueOf(hand.type().baseChips() + ((level - 1) * hand.type().levelChips())),
+					graphics, startX + screenHeight / 15, screenHeight / 20 * 9 + screenHeight / 30 + 10);
+			drawCenteredText(String.valueOf(hand.type().baseMult() + ((level - 1) * hand.type().levelMult())), graphics,
 					startX + spacing * 2 + width + screenHeight / 15, screenHeight / 20 * 9 + screenHeight / 30 + 10);
 
 		}
@@ -604,7 +700,7 @@ public final class ZenView implements View {
 
 		// Hands
 		graphics.setColor(Color.WHITE);
-		graphics.setFont(getFont(22));
+		graphics.setFont(getFont(20));
 		drawCenteredText("Hands", graphics, infoBarStart + infoBarWidth / 4, screenHeight / 20 * 12);
 		graphics.setFont(getFont(22));
 		graphics.setColor(Color.BLUE);
@@ -613,7 +709,7 @@ public final class ZenView implements View {
 
 		// Discard
 		graphics.setColor(Color.WHITE);
-		graphics.setFont(getFont(22));
+		graphics.setFont(getFont(20));
 		drawCenteredText("Discards", graphics, infoBarStart + infoBarWidth / 4 * 3, screenHeight / 20 * 12);
 		graphics.setFont(getFont(22));
 		graphics.setColor(Color.RED);
@@ -622,20 +718,17 @@ public final class ZenView implements View {
 
 		// Game Info
 		graphics.setColor(Color.WHITE);
-		graphics.setFont(getFont(22));
+		graphics.setFont(getFont(20));
 		drawCenteredText("Ante", graphics, infoBarStart + infoBarWidth / 4, screenHeight / 20 * 15);
-		graphics.setFont(getFont(22));
 		drawCenteredText("Round", graphics, infoBarStart + infoBarWidth / 4 * 3, screenHeight / 20 * 15);
 
 		graphics.setColor(Color.ORANGE);
 		graphics.setFont(getFont(22));
 		drawCenteredText(String.valueOf(state.getAnte()), graphics, infoBarStart + infoBarWidth / 4,
 				screenHeight / 20 * 16);
-		graphics.setFont(getFont(22));
 		drawCenteredText(String.valueOf(state.getRound()), graphics, infoBarStart + infoBarWidth / 4 * 3,
 				screenHeight / 20 * 16);
 
-		graphics.setFont(getFont(22));
 		drawCenteredText("$" + String.valueOf(state.getDollars()), graphics, infoBarStart + infoBarWidth / 2,
 				screenHeight / 20 * 18);
 	}
@@ -647,7 +740,6 @@ public final class ZenView implements View {
 	}
 
 	private void renderPlayResult(GameState state, Graphics2D graphics) {
-		graphics.clearRect(0, 0, context.getScreenInfo().width(), context.getScreenInfo().height());
 		renderInfo(state, graphics);
 		renderRoundEnd(state, graphics);
 	}
@@ -663,7 +755,7 @@ public final class ZenView implements View {
 		graphics.fillRoundRect(buttons.get("roundEnd").x(), buttons.get("roundEnd").y(),
 				buttons.get("roundEnd").width(), buttons.get("roundEnd").height(), 30, 30);
 		graphics.setColor(Color.WHITE);
-		graphics.setFont(getFont(30));
+		graphics.setFont(getFont(28));
 		int roundIndex = (state.getRound() - 1) % 3;
 		int remainingHands = state.getMaxHands() - state.getCurrentHandsPlay();
 		drawCenteredText("Cash Out: $" + String.valueOf(state.getBlinds().get(roundIndex).reward() + remainingHands),
@@ -684,7 +776,7 @@ public final class ZenView implements View {
 	public List<String> getUserInput(GameState state) {
 
 		List<String> out = new ArrayList<>();
-
+		this.mouseCoords = MouseInfo.getPointerInfo().getLocation();
 		while (true) {
 			Event event = context.pollOrWaitEvent(10); // 60 fps a peu pres (j'ai check a la main)
 			if (event == null) {
@@ -726,6 +818,8 @@ public final class ZenView implements View {
 					return "r";
 				case 3:
 					return "s";
+				case 10:
+					return "q";
 				}
 			}
 		}
@@ -743,6 +837,9 @@ public final class ZenView implements View {
 			}
 			if (input == 3) {
 				return "e";
+			}
+			if( input == 10) {
+				return "q";
 			}
 		}
 		case GAME_OVER, VICTORY -> {
@@ -785,7 +882,9 @@ public final class ZenView implements View {
 		if (buttons.get("exitShop").isClicked(mouseClick)) {
 			return 3;
 		}
-
+		if(buttons.get("quit").isClicked(mouseClick)) {
+			return 10;
+		}
 		return -1;
 	}
 

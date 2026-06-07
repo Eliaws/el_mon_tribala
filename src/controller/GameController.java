@@ -15,6 +15,7 @@ import domain.hand.scoring.Score;
 import model.GamePhase;
 import model.GameState;
 import view.View;
+import view.ZenView;
 
 public class GameController {
 
@@ -43,6 +44,14 @@ public class GameController {
 			case SHOP -> handleShop();
 			case GAME_OVER, VICTORY -> handleEnd();
 			}
+		}
+		switch (this.view) {
+		case ZenView zv -> {
+			zv.closeWindow();
+		}
+		default -> {
+			return;
+		}
 		}
 	}
 
@@ -99,7 +108,7 @@ public class GameController {
 
 	private void handleFinishedBlind() {
 		List<String> input = view.getUserInput(gameState);
-		if(input == null) {
+		if (input == null) {
 			return;
 		}
 		if (input.isEmpty()) {
@@ -107,7 +116,7 @@ public class GameController {
 			return;
 		}
 	}
-	
+
 	private void handleShop() {
 		List<String> input = view.getUserInput(gameState);
 		if (input == null || input.isEmpty()) {
