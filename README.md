@@ -33,3 +33,13 @@ Pour lancer dans la console:
 ```
 java -jar el_mon_tribala.jar console
 ```
+
+##Fonctionnalités 
+- Score par cartes
+- Défausse active
+- Monnaie et boutique
+
+## Credit
+- Font : Letterstyle by [wuchta](https://wuchta.itch.io/) 
+- Poker cards : Made by hand by Simon Saye Babu
+- Planets : Modified version of the cards found in Balatro
