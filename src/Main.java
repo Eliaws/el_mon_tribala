@@ -6,8 +6,25 @@ import view.ZenView;
 public class Main {
 
 	public static void main(String[] args) {
-		View view = new ConsoleView();
+		if (args.length > 1) {
+			IO.println("Usage: java Main [console|zen]");
+			return;
+		}
+		View view;
+		if (args.length == 1) {
+			if (!args[0].equals("zen") && !args[0].equals("console")) {
+				IO.println("Usage: java Main [console|zen]");
+				return;
+			}
+			if (args[0].equals("console")) {
+				view = new ConsoleView();
+				GameController controller = new GameController(view);
+				controller.run();
+			}
+		}
+		view = new ZenView();
 		GameController controller = new GameController(view);
 		controller.run();
+
 	}
 }
