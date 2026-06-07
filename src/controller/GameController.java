@@ -429,7 +429,7 @@ public class GameController {
 	 */
 	public void play() {
 		if (gameState.getPhase() != GamePhase.PLAYING_BLIND) {
-			return;
+			return null;
 		}
 		var selectedCards = gameState.getSelectedCards();
 		if (selectedCards.isEmpty()) {
@@ -459,6 +459,7 @@ public class GameController {
 		} else {
 			draw();
 		}
+		return new PlayResult(played, addedScore, playedCards);
 	}
 
 	/**
